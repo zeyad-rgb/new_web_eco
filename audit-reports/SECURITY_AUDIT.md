@@ -21,7 +21,7 @@ Tools: gitleaks 8.30.1 (history + worktree), Trivy 0.76.2 (vuln/secret/misconfig
 ### SEC-01 — Demoted staff keep admin access to customer PII
 | Severity | **High** | Confidence | Verified | Priority | P0 |
 |---|---|---|---|---|---|
-| Component | Staff API | Location | `backend/routes/web.php:167`, `:206`, `:317` | Status | Open |
+| Component | Staff API | Location | `backend/routes/web.php:167`, `:206`, `:317` | Status | **Fixed** on branch `fix/sec-01-stale-staff-role` |
 
 **Problem.** `/staff/orders`, `/staff/customers` and `/staff/whatsapp-queue` check `session('catalog_staff.role') === 'admin'`, a value written at login. Other admin routes re-read the role from the database through `$staff($request)`.
 **Root cause.** The role is cached in the session, and the session stays valid after a role change, because `$staff` only rejects a session when the password hash changes.
@@ -29,6 +29,7 @@ Tools: gitleaks 8.30.1 (history + worktree), Trivy 0.76.2 (vuln/secret/misconfig
 **Business impact.** An admin who is demoted, for example after leaving the team, can keep reading every customer's name, phone and address until the session expires.
 **Fix.** Replace the three session checks with `abort_unless($staff($request)?->role === 'admin', 403)`. Better still, add one `$authorizeAdmin` closure or a Laravel policy and use it on every admin route.
 **Regression test.** `run.php`: log in as admin, demote in the DB, then `check(req('GET','/staff/orders')->getStatusCode()===403, …)`. Do the same for `/staff/customers` and `/staff/whatsapp-queue`.
+**Resolution (2026-11-22).** Added an `$authorizeAdmin` gate in `routes/web.php` that reads the role from the database on every request, and used it on the three routes. New `run.php` checks: an admin reads 5 admin-only endpoints, gets demoted, then receives 403 on all 5, and the bundle hides orders. Before the fix the test failed on "demoted admin loses /staff/orders"; after it, 50/50 checks and 49/49 E2E pass.
 
 ### SEC-02 — `mfa_required` flag is not enforced
 | Severity | **Medium** | Confidence | Verified | Priority | P1 |

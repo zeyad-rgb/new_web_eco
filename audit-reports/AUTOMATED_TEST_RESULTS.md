@@ -4,7 +4,7 @@ Run: 2026-11-22 via `python tools/audit/run_audit.py` (raw output in `audit-repo
 
 | Stage | Status | Detail |
 |---|---|---|
-| backend-regression (`php backend/tests/run.php`) | ✅ passed | 38/38 checks, 3.6 s |
+| backend-regression (`php backend/tests/run.php`) | ✅ passed | 38/38 checks, 3.6 s (50/50 after the SEC-01 fix) |
 | larastan (level 5) | ⚠ findings | 20 errors, triaged in BACKEND_AUDIT.md |
 | frontend-typecheck-build (`vue-tsc` + `vite build`) | ✅ passed | 8.3 s |
 | composer-audit | ✅ passed | 0 advisories |

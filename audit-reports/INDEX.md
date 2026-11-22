@@ -4,11 +4,11 @@
 
 | Critical | High | Medium | Low | Info |
 |---|---|---|---|---|
-| 0 | 1 | 13 | 15 | 11 |
+| 0 | 1 (fixed) | 13 | 15 | 11 |
 
 | ID | Severity | Confidence | Title | Priority | Report |
 |---|---|---|---|---|---|
-| SEC-01 | **High** | Verified | Demoted staff keep admin access to customer PII | P0 | [Security](SECURITY_AUDIT.md) |
+| SEC-01 | ~~High~~ **Fixed** | Verified | Demoted staff keep admin access to customer PII | done | [Security](SECURITY_AUDIT.md) |
 | SEC-02 | Medium | Verified | `mfa_required` not enforced | P1 | [Security](SECURITY_AUDIT.md) |
 | SEC-03 | Medium | Verified | Missing CSP/nosniff/frame headers; nginx inheritance | P1 | [Security](SECURITY_AUDIT.md) |
 | SEC-05 | Medium | Verified | Plaintext PII in `whatsapp_queue` | P1 | [Security](SECURITY_AUDIT.md) |

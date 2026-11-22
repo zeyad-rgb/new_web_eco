@@ -71,4 +71,13 @@ check($custRes->getStatusCode()===200,'admin customers directory accessible');
 $custData = json_decode($custRes->getContent(), true);
 check(is_array($custData) && count($custData) >= 1,'customers returned from orders');
 check(DB::table('jobs')->count()===1,'idempotent retry creates no duplicate jobs');
+// SEC-01: admin-only endpoints must use the current DB role, not the role cached in the session at login.
+DB::table('catalog_staff')->insert(['email'=>'demoted-admin@example.test','password_hash'=>Hash::make('Demoted-password-123!'),'role'=>'admin','active'=>true,'mfa_required'=>false]);
+check(req('POST','/staff/dispatch-login',['email'=>'demoted-admin@example.test','password'=>'Demoted-password-123!'])->getStatusCode()===200,'second admin valid login');
+$adminOnly=['/staff/orders','/staff/customers','/staff/whatsapp-queue','/staff/settings','/staff/audit'];
+foreach($adminOnly as $path) check(req('GET',$path)->getStatusCode()===200,'admin reads '.$path);
+DB::table('catalog_staff')->where('email','demoted-admin@example.test')->update(['role'=>'catalog_manager']);
+foreach($adminOnly as $path) check(req('GET',$path)->getStatusCode()===403,'demoted admin loses '.$path);
+$demotedBundle=json_decode(req('GET','/staff/bundle')->getContent(),true);
+check($demotedBundle['orders']===[] && $demotedBundle['whatsappQueue']===[],'demoted admin bundle hides orders');
 echo "Completed ".$checks." isolated checks.".PHP_EOL;

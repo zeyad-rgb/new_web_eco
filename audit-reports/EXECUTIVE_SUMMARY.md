@@ -5,15 +5,15 @@
 ## Bottom line
 The money path works as designed. Prices are computed on the server, overselling is blocked, retries don't double-charge stock, and cancellations restore stock exactly once. **87 automated checks** prove this: 38 backend and 49 browser/API tests. Dependencies and git history are clean.
 
-Before launch, fix one **High** access-control bug and add backups and monitoring. Also stop offering card and InstaPay at checkout, because every order is actually placed as cash on delivery.
+The one **High** access-control bug is fixed (pending merge). Before launch, add backups and monitoring. Also stop offering card and InstaPay at checkout, because every order is actually placed as cash on delivery.
 
 ## Findings by severity
 | Critical | High | Medium | Low | Info |
 |---|---|---|---|---|
-| 0 | 1 | 13 | 15 | 11 |
+| 0 | 1 (fixed) | 13 | 15 | 11 |
 
 ## Top 5
-1. **SEC-01 (High).** A demoted admin can still read all customer orders and PII. Verified with a probe. About a 15-minute fix.
+1. **SEC-01 (High), fixed.** A demoted admin could still read all customer orders and PII. Fixed on `fix/sec-01-stale-staff-role` with 12 new regression checks.
 2. **EC-01 (Medium).** Checkout shows card and InstaPay but always places a COD order.
 3. **SEC-03 (Medium).** No CSP, and nginx drops security headers on the storefront HTML.
 4. **OPS-02 / OPS-03 (Medium).** No backups or restore procedure, and no error tracking or alerts.

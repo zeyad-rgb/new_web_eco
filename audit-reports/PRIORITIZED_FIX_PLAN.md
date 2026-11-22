@@ -5,7 +5,7 @@ Nothing below has been changed. Each item needs your approval before it touches 
 ## P0: now
 | # | ID | Fix | Regression test | Effort |
 |---|---|---|---|---|
-| 1 | SEC-01 | Use the DB role (`$staff($request)?->role`) in `/staff/orders`, `/staff/customers`, `/staff/whatsapp-queue` | run.php: demote admin, expect 403 on all three | 15 min |
+| 1 | ✅ SEC-01 (fixed, branch `fix/sec-01-stale-staff-role`) | Use the DB role (`$staff($request)?->role`) in `/staff/orders`, `/staff/customers`, `/staff/whatsapp-queue` | run.php: demote admin, expect 403 on all three | 15 min |
 
 ## P1: before launch
 | # | ID | Fix | Test | Effort |

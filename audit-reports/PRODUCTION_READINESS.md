@@ -1,12 +1,12 @@
 # Production readiness
 
-**Verdict: not ready for production yet.** The core checkout is solid and well tested. Blockers are one access-control bug (SEC-01), missing operational safety nets (backups, monitoring), and the misleading payment options.
+**Verdict: not ready for production yet.** The core checkout is solid and well tested. The access-control bug SEC-01 is now fixed. The remaining blockers are missing operational safety nets (backups, monitoring), and the misleading payment options.
 
 | Area | Status | Blocking items |
 |---|---|---|
 | Checkout correctness (pricing, stock, idempotency) | 🟢 ready | — |
 | Authentication | 🟡 | SEC-02 (MFA not enforced) |
-| Authorization | 🔴 | SEC-01 |
+| Authorization | 🟡 | SEC-01 fixed (merge pending); BE-01 consolidation still open |
 | Transport & headers | 🟡 | SEC-03 |
 | Customer-facing honesty | 🔴 | EC-01 |
 | Data protection | 🟡 | SEC-05 |

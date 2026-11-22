@@ -26,6 +26,11 @@ Route::prefix('staff')->group(function (): void {
     $authorize = static function (Request $request) use ($staff): void {
         abort_unless(in_array($staff($request)?->role, ['admin', 'catalog_manager'], true), 403);
     };
+    // Admin-only gate. Reads the role from the database on every request (via $staff),
+    // never from the session, so demoting or deactivating an admin takes effect immediately.
+    $authorizeAdmin = static function (Request $request) use ($staff): void {
+        abort_unless($staff($request)?->role === 'admin', 403);
+    };
 
     $logAudit = static function (string $actorEmail, string $event, ?string $subjectType = null, ?string $subjectId = null, array $metadata = [], ?string $ip = null): void {
         unset($metadata['password'], $metadata['password_hash'], $metadata['token'], $metadata['csrf']);
@@ -162,9 +167,8 @@ Route::prefix('staff')->group(function (): void {
         return response()->json(['categories' => DB::table('categories')->orderBy('name')->get(), 'products' => $products, 'productTypes' => DB::table('product_types')->orderBy('name')->get()])
             ->header('Cache-Control', 'no-store');
     });
-    Route::get('/orders', static function (Request $request) use ($authorize) {
-        $authorize($request);
-        abort_unless($request->session()->get('catalog_staff.role') === 'admin', 403);
+    Route::get('/orders', static function (Request $request) use ($authorizeAdmin) {
+        $authorizeAdmin($request);
         $page=max(1,(int)$request->query('page',1));
         $orders = DB::table('orders')->orderByDesc('created_at')->orderByDesc('id')->offset(($page-1)*50)->limit(50)->get();
         return response()->json($orders->map(static function ($order): array {
@@ -201,9 +205,8 @@ Route::prefix('staff')->group(function (): void {
         return response()->json(['saved' => true, 'status' => $data['status']]);
     });
 
-    Route::get('/customers', static function (Request $request) use ($authorize) {
-        $authorize($request);
-        abort_unless($request->session()->get('catalog_staff.role') === 'admin', 403);
+    Route::get('/customers', static function (Request $request) use ($authorizeAdmin) {
+        $authorizeAdmin($request);
         $page = max(1, (int) $request->query('page', 1));
         $res = \App\Services\CustomerDirectory::paginate($page, 50);
         return response()->json($res['data'])
@@ -312,9 +315,8 @@ Route::prefix('staff')->group(function (): void {
     });
 
     // ── WhatsApp Queue endpoints ─────────────────────────────────────
-    Route::get('/whatsapp-queue', static function (Request $request) use ($authorize) {
-        $authorize($request);
-        abort_unless($request->session()->get('catalog_staff.role') === 'admin', 403);
+    Route::get('/whatsapp-queue', static function (Request $request) use ($authorizeAdmin) {
+        $authorizeAdmin($request);
         return response()->json(
             DB::table('whatsapp_queue')->orderByDesc('id')->limit(50)->get()
         )->header('Cache-Control', 'no-store');
