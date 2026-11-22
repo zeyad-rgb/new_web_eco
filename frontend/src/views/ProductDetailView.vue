@@ -54,6 +54,31 @@ function syncColor() {
 onMounted(syncColor)
 watch(product, syncColor)
 
+// Per-product title and description: the router only sets a generic title (FE-04),
+// which made every product share one entry in search results and link previews.
+function setMeta(title: string, description: string) {
+  document.title = title
+  let tag = document.querySelector('meta[name="description"]')
+  if (!tag) {
+    tag = document.createElement('meta')
+    tag.setAttribute('name', 'description')
+    document.head.appendChild(tag)
+  }
+  tag.setAttribute('content', description)
+}
+watch([product, () => locale.locale], () => {
+  if (!product.value) return
+  const name = locale.getProductName(product.value)
+  const description = (product.value.description || '').trim().slice(0, 155)
+  setMeta(`${name} · Studio Active`, description || name)
+}, { immediate: true })
+
+// The catalog has loaded and this id is not in it: show a real not-found state
+// instead of a skeleton that never resolves.
+const productMissing = computed(() =>
+  !product.value && !catalog.loading && catalog.products.length > 0
+)
+
 const colors = computed(() => [
   ...new Set(product.value?.variants.map((variant) => variant.color)),
 ])
@@ -332,6 +357,13 @@ const relatedProducts = computed(() => {
       </div>
     </div>
 
+    <!-- Unknown product id -->
+    <div v-else-if="productMissing" class="drawer-body product-missing" data-test="product-missing">
+      <h1>{{ locale.locale === 'en' ? 'Product not found' : 'المنتج غير موجود' }}</h1>
+      <p>{{ locale.locale === 'en' ? 'This product may have been removed or the link is incorrect.' : 'ربما تم حذف هذا المنتج أو أن الرابط غير صحيح.' }}</p>
+      <router-link class="primary" to="/shop">{{ locale.locale === 'en' ? 'Browse the shop' : 'تصفح المتجر' }}</router-link>
+    </div>
+
     <!-- Product Detail Skeleton (Cold Start without Cache) -->
     <div v-else class="drawer-body product-detail skeleton-pdp">
       <div class="skeleton-gallery-box"></div>
@@ -391,6 +423,8 @@ const relatedProducts = computed(() => {
 </template>
 
 <style scoped>
+.product-missing { display: grid; gap: 1rem; justify-items: center; text-align: center; padding: 4rem 1rem; }
+.product-missing .primary { display: inline-block; padding: 0.75rem 1.5rem; }
 .pdp-page {
   padding-bottom: 5rem;
 }

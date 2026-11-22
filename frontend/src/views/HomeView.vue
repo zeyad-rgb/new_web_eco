@@ -1,16 +1,51 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCatalogStore } from '../stores/catalog'
+import { useLocaleStore } from '../stores/locale'
+import { categoryBranch } from '../taxonomy'
 import ProductCard from '../components/product/ProductCard.vue'
 
 const catalog = useCatalogStore()
-const latest = computed(() => catalog.products.slice(0, 4))
-const collections = [
-  { label: 'MEN', slug: 'men', image: '/reference/men.jpg' },
-  { label: 'WOMEN', slug: 'women', image: '/reference/women.jpg' },
-  { label: 'T-SHIRTS', slug: 't-shirts', image: '/campaign/sculptural-sportswear.webp' },
-  { label: 'SHORTS', slug: 'shorts', image: '/campaign/cairo-dawn.webp' },
-]
+const locale = useLocaleStore()
+
+// Newest first: products the staff marked as "latest", then the rest.
+const latest = computed(() =>
+  [...catalog.products]
+    .sort((a, b) => Number(b.collections.includes('latest')) - Number(a.collections.includes('latest')))
+    .slice(0, 4)
+)
+
+// Editorial images for categories we have artwork for; others fall back to a product photo.
+const TILE_IMAGES: Record<string, string> = {
+  men: '/reference/men.jpg',
+  women: '/reference/women.jpg',
+  tees: '/campaign/sculptural-sportswear.webp',
+  shorts: '/campaign/cairo-dawn.webp',
+}
+
+/** Number of published products inside a category branch (a parent counts its children). */
+function productCount(slug: string): number {
+  const branch = categoryBranch(catalog.categories, slug)
+  return catalog.products.filter((product) => branch.has(product.categoryId ?? '')).length
+}
+
+// Built from the real taxonomy so a tile never lands on an empty shop page.
+const tiles = computed(() => {
+  const roots = catalog.categories.filter((item) => !item.parent_slug)
+  const candidates = roots.length ? roots : catalog.categories
+  return candidates
+    .map((category) => ({
+      slug: category.slug,
+      label: locale.getCategoryName(category),
+      count: productCount(category.slug),
+      image: TILE_IMAGES[category.slug]
+        ?? catalog.products.find((product) => categoryBranch(catalog.categories, category.slug).has(product.categoryId ?? ''))?.image
+        ?? '/campaign/sculptural-sportswear.webp',
+    }))
+    .filter((tile) => tile.count > 0)
+    .slice(0, 4)
+})
+
 function categoryLink(slug: string) {
   return { path: '/shop', query: { category: slug } }
 }
@@ -28,15 +63,15 @@ function categoryLink(slug: string) {
       <div class="hero-foot"><strong>PUSH<br />YOUR LIMITS</strong><span>WINTER COLLECTION</span><strong>DROP 01<br />MOVE WITH<br />PURPOSE</strong></div>
     </section>
 
-    <section class="collection-intro">
+    <section v-if="tiles.length" class="collection-intro">
       <h2><i></i> SHOP BY COLLECTION <i></i></h2>
       <p>luxury collection waiting for you</p>
     </section>
 
-    <section class="collection-grid" aria-label="Shop by collection">
-      <router-link v-for="collection in collections" :key="collection.slug" :to="categoryLink(collection.slug)" class="collection-card">
-        <img :src="collection.image" :alt="collection.label" loading="lazy" />
-        <span>{{ collection.label }}</span>
+    <section v-if="tiles.length" class="collection-grid" aria-label="Shop by collection">
+      <router-link v-for="tile in tiles" :key="tile.slug" :to="categoryLink(tile.slug)" class="collection-card">
+        <img :src="tile.image" :alt="tile.label" loading="lazy" width="800" height="920" />
+        <span>{{ tile.label }}</span>
         <b>→</b>
       </router-link>
     </section>
