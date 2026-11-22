@@ -113,6 +113,37 @@ test.describe('/profile page', () => {
     expect((await page.request.post('/api/v1/orders/track', { headers: json, data: { order_id: randomUUID() } })).status()).toBe(404)
   })
 
+  test('header account button takes a signed-in customer straight to /profile (no login flash)', async ({ page }) => {
+    const c = newCustomer()
+    await page.goto('/register')
+    const csrf = await csrfToken(page)
+    expect((await page.request.post('/customer/register', { headers: { ...json, 'X-CSRF-TOKEN': csrf }, data: c })).status()).toBe(200)
+    await page.goto('/profile') // establishes auth.user from the server session
+    await expect(page.getByText(c.email)).toBeVisible()
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    // Flag the symptom the user saw: the login form rendering even briefly.
+    await page.evaluate(() => {
+      const w = window as unknown as { __loginShown: boolean }
+      w.__loginShown = false
+      new MutationObserver(() => { if (document.querySelector('input[type="password"]') || location.pathname === '/login') w.__loginShown = true })
+        .observe(document.body, { childList: true, subtree: true })
+    })
+    await expect(page.locator('a[aria-label="My account"]')).toHaveAttribute('href', '/profile')
+    await page.locator('a[aria-label="My account"]').click()
+    await expect(page).toHaveURL(/\/profile$/)
+    await expect(page.getByText(c.email)).toBeVisible()
+    expect(await page.evaluate(() => (window as unknown as { __loginShown: boolean }).__loginShown), 'login page flashed').toBe(false)
+  })
+
+  test('stale stored customer on /login shows the form once (no redirect loop)', async ({ page }) => {
+    await page.goto('/')
+    await page.evaluate(() => localStorage.setItem('ecomars_auth', JSON.stringify({ user: { id: 'gone', name: 'Old', email: 'old@example.test', phone: '01099999999', role: 'customer' } })))
+    await page.goto('/login')
+    await expect(page).toHaveURL(/\/login/)
+    await expect(page.locator('input[type="password"]')).toBeVisible()
+  })
+
   test('anonymous visitor is redirected away from /profile (CUST-01)', async ({ page }) => {
     await page.goto('/profile')
     await expect(page).toHaveURL(/\/login\?redirect=/)

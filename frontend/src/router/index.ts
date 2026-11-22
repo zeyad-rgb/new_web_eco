@@ -150,6 +150,16 @@ router.beforeEach(async (to, _from, next) => {
       return next('/login?redirect=' + encodeURIComponent(to.fullPath))
     }
   }
+  // Signed-in visitors skip the login form entirely. The target route's own guard
+  // (/admin or /profile) re-validates with the server; if the session is gone it clears
+  // the stored user and sends them back here, where this check no longer matches.
+  if (to.path === '/login') {
+    const auth = useAuthStore()
+    const role = auth.staffSession?.signedIn ? auth.staffSession.role : auth.user?.role
+    const redirect = typeof to.query.redirect === 'string' ? to.query.redirect : ''
+    if (role === 'admin' || role === 'catalog_manager') return next(redirect.startsWith('/admin') ? redirect : '/admin/dashboard')
+    if (role === 'customer') return next('/profile')
+  }
   // CUST-01: the account page needs a live customer session on the server.
   // The persisted copy in localStorage is never trusted on its own.
   if (to.path === '/profile') {

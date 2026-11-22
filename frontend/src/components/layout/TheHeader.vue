@@ -4,11 +4,21 @@ import { useRoute } from 'vue-router'
 import { useCartStore } from '../../stores/cart'
 import { useLocaleStore } from '../../stores/locale'
 import { useCatalogStore } from '../../stores/catalog'
+import { useAuthStore } from '../../stores/auth'
 import SearchOverlay from '../navigation/SearchOverlay.vue'
 const cart = useCartStore()
 const locale = useLocaleStore()
 const catalog = useCatalogStore()
 const route = useRoute()
+const auth = useAuthStore()
+// Send signed-in people straight to their own area instead of /login (which used to
+// render first and redirect only after a network round-trip).
+const accountLink = computed(() => {
+  const role = auth.staffSession?.signedIn ? auth.staffSession.role : auth.user?.role
+  if (role === 'admin' || role === 'catalog_manager') return '/admin/dashboard'
+  if (role === 'customer') return '/profile'
+  return '/login'
+})
 const open = ref(false)
 const search = ref(false)
 const activeCategory = ref<string | null>(null)
@@ -100,7 +110,7 @@ function closeMenu(event: KeyboardEvent) { if(event.key === 'Escape') open.value
  </nav>
  <div class="cap-tools">
   <button class="cap-desktop-tool" aria-label="Search" @click="search = true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg></button>
-  <router-link class="cap-desktop-tool" to="/login" aria-label="My account"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></router-link>
+  <router-link class="cap-desktop-tool" :to="accountLink" aria-label="My account"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></router-link>
   <button class="cap-bag" aria-label="Shopping bag" @click="cart.toggleDrawer(true)"><svg width="21" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 5h14l1 16H4L5 5Z"/><path d="M9 4v5a3 3 0 0 0 6 0V4"/></svg><b v-if="cart.count">{{ cart.count }}</b></button>
  </div>
 </header>
@@ -109,7 +119,7 @@ function closeMenu(event: KeyboardEvent) { if(event.key === 'Escape') open.value
   <button class="cap-close" aria-label="Close menu" @click="open = false">×</button>
   <router-link to="/">HOME</router-link><router-link to="/shop">SHOP ALL</router-link>
   <router-link to="/shop?category=men">MEN</router-link><router-link to="/shop?category=women">WOMEN</router-link><router-link to="/shop?category=kids">KIDS</router-link>
-  <router-link to="/shop?collection=latest">NEW DROP</router-link><router-link to="/login">MY ACCOUNT</router-link>
+  <router-link to="/shop?collection=latest">NEW DROP</router-link><router-link :to="accountLink">MY ACCOUNT</router-link>
   <button @click="open = false; search = true">SEARCH</button>
   <button @click="locale.toggleLocale()">{{ locale.locale === 'en' ? 'العربية' : 'English' }}</button>
  </nav>
