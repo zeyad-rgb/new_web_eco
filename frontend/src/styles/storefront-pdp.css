@@ -1,0 +1,272 @@
+/* Studio Active — product detail page.
+   Athletic retail direction: full-bleed imagery, flat surfaces (no cards or
+   drop shadows), one accent used sparingly, and a buy column that stays with
+   the shopper while the gallery scrolls.
+   Logical properties throughout so the Arabic (RTL) and English (LTR) layouts
+   mirror correctly from the same rules. */
+
+:root {
+  --pdp-ink: #0b0b0c;
+  --pdp-ink-soft: #55575c;
+  --pdp-line: #e2e2df;
+  --pdp-surface: #ffffff;
+  --pdp-stage: #f1f0ec;
+  --pdp-accent: #d35a28;
+  --pdp-ok: #1d7a44;
+  --pdp-max: 1480px;
+}
+
+/* ---- Shell ------------------------------------------------------------- */
+.app-page.pdp-page {
+  max-width: var(--pdp-max);
+  padding-inline: clamp(1rem, 4vw, 3.5rem);
+  padding-block: 0 clamp(3rem, 6vw, 5rem);
+  color: var(--pdp-ink);
+}
+
+.pdp-page .listing-path {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-block: 1.25rem;
+  color: var(--pdp-ink-soft);
+}
+
+/* Gallery gets the room; the buy column is a fixed, readable measure. */
+.app-page .product-detail.product-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: start;
+  max-width: none;
+}
+
+/* ---- Buy column -------------------------------------------------------- */
+/* Flat, not a floating card: the page is the surface. */
+.pdp-page .product-options {
+  position: sticky;
+  top: 1.5rem;
+  background: var(--pdp-surface);
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+}
+
+.pdp-page .product-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block-end: 1.25rem;
+  border-block-end: 1px solid var(--pdp-line);
+}
+
+.pdp-page .label {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pdp-accent);
+  font-weight: 700;
+  margin: 0;
+}
+
+/* The title is the last thing in its block, so drop its trailing margin and
+   let .product-header-row's padding set the distance to the rule. */
+.pdp-page .product-header-row > div { min-width: 0; }
+.pdp-page .product-header-row .product-title { margin-block-end: 0; }
+
+/* Keep the size-guide link clear of the floating WhatsApp button. */
+.pdp-page .option-header { padding-inline-end: 0.25rem; }
+
+.pdp-page .product-title {
+  font-size: clamp(1.75rem, 3.2vw, 2.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  font-weight: 800;
+  margin-block: 0.35rem 0.6rem;
+}
+
+.pdp-page .detail-price {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pdp-page .product-desc {
+  color: var(--pdp-ink-soft);
+  line-height: 1.65;
+  max-width: 48ch;
+  margin: 0;
+}
+
+/* ---- Options ----------------------------------------------------------- */
+.pdp-page .option-group { display: grid; gap: 0.7rem; }
+
+.pdp-page .option-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pdp-page .option-header strong { font-weight: 700; }
+
+.pdp-page .options { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* Square size chips: unmistakably selectable, large enough to tap. */
+.pdp-page .options button {
+  min-width: 3.4rem;
+  min-height: 3rem;
+  padding-inline: 0.75rem;
+  background: var(--pdp-surface);
+  border: 1px solid var(--pdp-line);
+  border-radius: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.pdp-page .options button:hover:not(:disabled) { border-color: var(--pdp-ink); }
+
+.pdp-page .options button[aria-pressed='true'] {
+  border-color: var(--pdp-ink);
+  background: var(--pdp-ink);
+  color: #fff;
+}
+
+/* Out of stock stays readable, struck through rather than faded away. */
+.pdp-page .options button:disabled {
+  color: #a7a8a4;
+  cursor: not-allowed;
+  background: repeating-linear-gradient(135deg, #fafaf8 0 6px, #f1f0ec 6px 12px);
+  text-decoration: line-through;
+}
+
+.pdp-page .color-photo-option {
+  inline-size: 56px;
+  block-size: 72px;
+  border-radius: 0;
+  border: 1px solid var(--pdp-line);
+  padding: 0;
+  overflow: hidden;
+  background: var(--pdp-stage);
+  cursor: pointer;
+}
+
+.pdp-page .color-photo-option img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.pdp-page .color-photo-option[aria-pressed='true'] { border-color: var(--pdp-ink); border-width: 2px; }
+.pdp-page .color-photo-fallback { inline-size: 100%; block-size: 100%; border-radius: 0; }
+
+.pdp-page .size-guide-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  color: var(--pdp-ink-soft);
+}
+
+/* ---- Actions ----------------------------------------------------------- */
+.pdp-page .pdp-actions { display: flex; gap: 0.6rem; }
+
+.pdp-page .add-to-bag-btn {
+  flex: 1;
+  min-height: 3.5rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--pdp-ink);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pdp-page .add-to-bag-btn:hover:not(:disabled) { background: var(--pdp-accent); }
+.pdp-page .add-to-bag-btn:disabled { background: #d7d7d3; color: #76777a; cursor: not-allowed; }
+
+.pdp-page .pdp-fav-btn {
+  inline-size: 3.5rem;
+  min-height: 3.5rem;
+  border: 1px solid var(--pdp-ink);
+  border-radius: 0;
+  background: var(--pdp-surface);
+  cursor: pointer;
+}
+
+.pdp-page .urgency-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--pdp-accent);
+}
+
+/* ---- Accordions -------------------------------------------------------- */
+.pdp-page .pdp-accordions { border-block-start: 1px solid var(--pdp-line); }
+.pdp-page .accordion-item { border-block-end: 1px solid var(--pdp-line); }
+
+.pdp-page .accordion-trigger {
+  inline-size: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1.1rem;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: start;
+  cursor: pointer;
+}
+
+.pdp-page .accordion-content { padding-block-end: 1.1rem; color: var(--pdp-ink-soft); line-height: 1.7; }
+.pdp-page .accordion-content p { margin-block: 0.3rem; }
+
+/* ---- Related ----------------------------------------------------------- */
+.pdp-page .related-section { margin-block-start: clamp(3rem, 7vw, 6rem); }
+
+.pdp-page .related-section .section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block-end: 1.25rem;
+  border-block-end: 2px solid var(--pdp-ink);
+  margin-block-end: 1.5rem;
+}
+
+.pdp-page .related-section h2 {
+  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-weight: 800;
+  margin: 0;
+}
+
+.pdp-page .related-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; }
+
+/* ---- Mobile ------------------------------------------------------------ */
+@media (max-width: 900px) {
+  .app-page .product-detail.product-detail { grid-template-columns: 1fr; }
+  .pdp-page .product-options { position: static; }
+  /* The sticky bar at the bottom carries the buy action on small screens. */
+  .pdp-page .pdp-actions { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdp-page * { transition: none !important; }
+}

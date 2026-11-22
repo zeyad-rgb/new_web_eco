@@ -67,7 +67,12 @@ function closeMenu(event: KeyboardEvent) { if(event.key === 'Escape') open.value
  <strong>{{ catalog.storefrontSettings.announcement_text }}</strong>
  <a v-if="catalog.storefrontSettings.location_url" class="visit-link" :href="catalog.storefrontSettings.location_url" target="_blank" rel="noopener noreferrer">⌖ &nbsp;{{ catalog.storefrontSettings.visit_label }}</a>
  <button v-else class="visit-link" type="button">⌖ &nbsp;{{ catalog.storefrontSettings.visit_label }}</button>
- <button class="language-button" type="button" @click="locale.toggleLocale()">English⌄</button>
+ <button
+  class="language-button"
+  type="button"
+  :aria-label="locale.locale === 'en' ? 'التبديل إلى العربية' : 'Switch to English'"
+  @click="locale.toggleLocale()"
+ >{{ locale.locale === 'en' ? 'العربية' : 'English' }}</button>
 </div>
 <header class="cap-header" dir="ltr" @keydown="closeMenu">
  <button class="cap-menu-button" aria-label="Open menu" :aria-expanded="open" aria-controls="cap-navigation" @click="open = !open"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 5h20M2 12h20M2 19h20" /></svg></button>

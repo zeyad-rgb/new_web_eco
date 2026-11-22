@@ -422,6 +422,10 @@ const relatedProducts = computed(() => {
   </section>
 </template>
 
+<!-- Page-level layout and type live in one stylesheet (unscoped so it can
+     reach the shared .product-detail / .product-options rules in store.css). -->
+<style src="../styles/storefront-pdp.css"></style>
+
 <style scoped>
 .product-missing { display: grid; gap: 1rem; justify-items: center; text-align: center; padding: 4rem 1rem; }
 .product-missing .primary { display: inline-block; padding: 0.75rem 1.5rem; }
