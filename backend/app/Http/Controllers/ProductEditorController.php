@@ -69,6 +69,10 @@ final class ProductEditorController
             'categoryId' => ['required', Rule::exists('categories', 'slug')],
             'price' => ['required', 'integer', 'between:1,100000000'],
             'published' => ['required', 'boolean'],
+            'label' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'fit' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'collections' => ['sometimes', 'array', 'list', 'max:20'],
+            'collections.*' => ['required', 'string', 'distinct', Rule::exists('collections', 'slug')],
             'colorOptions' => ['required', 'array', 'list', 'min:1', 'max:100'],
             'colorOptions.*' => ['required', 'array:id,name,hex,images'],
             'colorOptions.*.id' => ['required', 'uuid', 'distinct'],
@@ -120,7 +124,9 @@ final class ProductEditorController
                     ...$details, 'id' => $id, 'name' => $data['name'], 'description' => $data['description'] ?? '',
                     'price' => $data['price'], 'colorOptions' => $colors->values()->all(), 'sizeOptions' => $data['sizeOptions'],
                     'images' => $colors->flatMap(fn ($color) => $color['images'])->values()->all(),
-                    'label' => $details['label'] ?? '', 'image' => $details['image'] ?? '', 'fit' => $details['fit'] ?? '',
+                    'label' => array_key_exists('label', $data) ? trim((string) $data['label']) : ($details['label'] ?? ''),
+                    'fit' => array_key_exists('fit', $data) ? trim((string) $data['fit']) : ($details['fit'] ?? ''),
+                    'image' => $details['image'] ?? '',
                 ], JSON_THROW_ON_ERROR),
             ]);
             $kept = [];
@@ -135,7 +141,18 @@ final class ProductEditorController
                     'size' => $variant['size'], 'stock' => $variant['stock'],
                 ]);
             }
+            $removed = $old->pluck('sku')->diff($kept);
+            if ($removed->isNotEmpty()) {
+                $sold = DB::table('inventory_movements')->whereIn('sku', $removed)->pluck('sku')->unique();
+                abort_if($sold->isNotEmpty(), 409, 'لا يمكن حذف مقاس أو لون له طلبات سابقة. اضبط الكمية على صفر بدلاً من حذفه.');
+            }
             DB::table('variants')->where('product_id', $id)->whereNotIn('sku', $kept)->delete();
+            if (array_key_exists('collections', $data)) {
+                DB::table('collection_product')->where('product_id', $id)->whereNotIn('collection_slug', $data['collections'] ?: [''])->delete();
+                foreach ($data['collections'] as $slug) {
+                    DB::table('collection_product')->insertOrIgnore(['collection_slug' => $slug, 'product_id' => $id]);
+                }
+            }
             DB::table('product_media')->where('product_id', $id)->whereNotIn('id', $mediaIds)->update(['product_id' => null, 'owner' => $email]);
             DB::table('product_media')->whereIn('id', $mediaIds)->update(['product_id' => $id]);
         }, 3);

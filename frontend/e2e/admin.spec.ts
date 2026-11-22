@@ -87,6 +87,51 @@ test.describe('admin workflows', () => {
   })
 })
 
+test.describe('admin changes reach the storefront', () => {
+  test('badge, fit and collection set in the editor appear on the shop page', async ({ page, problems }) => {
+    const csrf = await signIn(page, 'e2e-admin@example.test')
+    const catalog = await (await page.request.get('/staff/catalog', { headers: json })).json()
+    expect(Array.isArray(catalog.collections), 'staff catalog exposes collections').toBe(true)
+    const collection = catalog.collections[0]
+    expect(collection, 'at least one collection is seeded').toBeTruthy()
+    const categorySlug = catalog.categories.find((c: any) => c.parent_slug)?.slug ?? catalog.categories[0].slug
+    const colorId = crypto.randomUUID()
+    const name = 'E2E Badged Tee'
+    const save = await page.request.post('/staff/products', {
+      headers: { ...json, 'X-CSRF-TOKEN': csrf },
+      data: {
+        id: null, name, description: 'Storefront sync check', categoryId: categorySlug, price: 39900, published: true,
+        label: 'E2E BADGE', fit: 'Oversized', collections: [collection.slug],
+        colorOptions: [{ id: colorId, name: 'Olive', hex: '#4a5d32', images: [] }],
+        sizeOptions: ['M'], variants: [{ colorId, size: 'M', stock: 3 }], originalVariants: [],
+      },
+    })
+    expect(save.status(), await save.text()).toBe(200)
+
+    // The public catalog is cached for 30s and the save busts that cache, so the
+    // storefront must serve the new product on the next request.
+    const published = await page.request.get('/api/v1/products', { headers: { ...json, 'Cache-Control': 'no-cache' } })
+    const fromApi = (await published.json()).products.find((p: any) => p.name === name)
+    expect(fromApi, 'saved product is in the public catalog').toBeTruthy()
+    expect(fromApi.label).toBe('E2E BADGE')
+    expect(fromApi.fit).toBe('Oversized')
+    expect(fromApi.collections).toContain(collection.slug)
+
+    // The storefront filters by collection and shows the badge on the card.
+    // Clear the SWR paint cache first: this tab loaded the shop before the product existed.
+    await page.goto('/shop')
+    await page.evaluate(() => sessionStorage.removeItem('studioactive_catalog_cache'))
+    await page.goto(`/shop?collection=${collection.slug}`)
+    await page.waitForLoadState('networkidle')
+    // In English the card title shows the badge (locale.getProductName falls back to label).
+    const card = page.locator('.product-card-adv', { hasText: 'E2E BADGE' })
+    await expect(card).toHaveCount(1)
+    await expect(card, 'fit is shown under the title').toContainText('Oversized')
+    expect(name).toBeTruthy()
+    expect(problems.console).toEqual([])
+  })
+})
+
 test.describe('catalog manager role', () => {
   test('menu only offers sections the role can use, and none of them error', async ({ page, problems }) => {
     const forbidden: string[] = []

@@ -112,6 +112,8 @@ Route::prefix('staff')->group(function (): void {
         );
         $categories = DB::table('categories')->orderBy('name')->get();
         $productTypes = DB::table('product_types')->orderBy('name')->get();
+        $collections = DB::table('collections')->orderBy('name')->get();
+        $bundleMemberships = DB::table('collection_product')->get()->groupBy('product_id');
 
         $ordersRaw = $currentStaff?->role === 'admin' ? DB::table('orders')->orderByDesc('created_at')->limit(50)->get() : collect();
         $orders = $ordersRaw->map(static function ($order): array {
@@ -144,7 +146,8 @@ Route::prefix('staff')->group(function (): void {
             ],
             'catalog' => [
                 'categories' => $categories,
-                'products' => $products,
+                'products' => $products->map(fn (array $item) => [...$item, 'collections' => $bundleMemberships->get($item['id'], collect())->pluck('collection_slug')->values()]),
+                'collections' => $collections,
                 'productTypes' => $productTypes,
             ],
             'analytics' => $currentStaff?->role === 'admin' ? ['revenue'=>(int)DB::table('orders')->where('status','delivered')->sum('total'),'processing'=>(int)DB::table('orders')->where('status','processing')->count(),'orders'=>(int)DB::table('orders')->count()] : null,
@@ -157,14 +160,16 @@ Route::prefix('staff')->group(function (): void {
     Route::get('/catalog', static function (Request $request) use ($authorize) {
         $authorize($request);
         $variants = DB::table('variants')->get()->groupBy('product_id');
+        $memberships = DB::table('collection_product')->get()->groupBy('product_id');
         $products = DB::table('catalog_products')->whereNotNull('details')->orderBy('id')->get()->map(
             fn ($item) => [
                 ...json_decode($item->details, true, flags: JSON_THROW_ON_ERROR), 'id' => $item->id,
                 'categoryId' => $item->category_slug, 'published' => (bool) $item->published,
+                'collections' => $memberships->get($item->id, collect())->pluck('collection_slug')->values(),
                 'variants' => $variants->get($item->id, collect())->map(fn ($row) => [...(array) $row, 'colorId' => $row->color_key])->values(),
             ]
         );
-        return response()->json(['categories' => DB::table('categories')->orderBy('name')->get(), 'products' => $products, 'productTypes' => DB::table('product_types')->orderBy('name')->get()])
+        return response()->json(['categories' => DB::table('categories')->orderBy('name')->get(), 'products' => $products, 'collections' => DB::table('collections')->orderBy('name')->get(), 'productTypes' => DB::table('product_types')->orderBy('name')->get()])
             ->header('Cache-Control', 'no-store');
     });
     Route::get('/orders', static function (Request $request) use ($authorizeAdmin) {

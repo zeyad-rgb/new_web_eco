@@ -43,6 +43,7 @@ const analytics = ref<{ revenue: number; processing: number } | null>(null)
 const customers = ref<any[]>([])
 const auditEvents = ref<any[]>([])
 const productTypes = ref<ProductType[]>([])
+const collections = ref<{ slug: string; name: string }[]>([])
 
 // Auth & UI State (Optimistic App Shell)
 const signedIn = ref(true)
@@ -251,6 +252,7 @@ async function load() {
   const data = await request('catalog')
   categories.value = data.categories || []
   productTypes.value = data.productTypes || []
+  collections.value = data.collections || []
   products.value = data.products || []
 }
 
@@ -264,6 +266,7 @@ async function loadBundle() {
     if (data.session.signedIn) {
       categories.value = data.catalog?.categories || []
       productTypes.value = data.catalog?.productTypes || []
+      collections.value = data.catalog?.collections || []
       products.value = data.catalog?.products || []
       orders.value = data.orders || []
       analytics.value = data.analytics || null
@@ -379,7 +382,7 @@ function openEditor() {
 }
 
 function edit(item?: Product) {
-  product.value = item ? { ...item, variants: item.variants.map(v => ({ ...v })) } : {
+  product.value = item ? { ...item, collections: [...(item.collections ?? [])], variants: item.variants.map(v => ({ ...v })) } : {
     id: '',
     name: '',
     categoryId: categories.value.some(c => c.slug === props.initialCategory) ? props.initialCategory : '',
@@ -802,6 +805,7 @@ async function logout() {
                 :key="product.id + ':' + productId"
                 :initial="product"
                 :categories="categories"
+                :collections="collections"
                 :demo="false"
                 :csrf="csrf"
                 :busy="busy"

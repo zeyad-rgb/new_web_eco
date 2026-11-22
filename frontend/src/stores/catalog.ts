@@ -25,12 +25,14 @@ export const useCatalogStore = defineStore('catalog', () => {
   const lastLoadedAt = ref<number>(0)
   let invalidated = false
 
-  // ⚡ SWR Instant Hydration from Cache (0ms First Contentful Paint)
+  // ⚡ SWR instant hydration: show the cached catalog at once, then always revalidate.
+  // The cache is a paint shortcut only, so lastLoadedAt stays 0 and load() still fetches.
+  const CACHE_MAX_AGE = 10 * 60_000
   try {
     const cached = sessionStorage.getItem(CATALOG_CACHE_KEY)
     if (cached) {
       const data = JSON.parse(cached)
-      if (Array.isArray(data.products) && data.products.length) {
+      if (Array.isArray(data.products) && data.products.length && Date.now() - (data.cachedAt ?? 0) < CACHE_MAX_AGE) {
         products.value = data.products
         categories.value = data.categories || []
         productTypes.value = data.productTypes || []
@@ -124,7 +126,7 @@ export const useCatalogStore = defineStore('catalog', () => {
 
       // ⚡ Cache catalog for instant 0ms loads
       try {
-        sessionStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(data))
+        sessionStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify({ ...data, cachedAt: Date.now() }))
       } catch {}
     } catch {
       if (!products.value.length) {

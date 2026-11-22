@@ -108,7 +108,10 @@ final class ShopController
 
         return response($rawJson, 200, [
             'Content-Type' => 'application/json',
-            'Cache-Control' => 'public, max-age=30, stale-while-revalidate=60',
+            // Browsers must revalidate (cheap: the ETag answers 304), so a staff edit is
+            // visible on the storefront immediately instead of up to 30s later.
+            // The server-side cache above still absorbs the database work.
+            'Cache-Control' => 'public, max-age=0, must-revalidate',
             'ETag' => $etag,
         ]);
     }

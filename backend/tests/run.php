@@ -104,4 +104,35 @@ check(count($cancelled)>=1 && count(array_filter($cancelled,fn($o)=>$o['status']
 check($filtered->headers->get('X-Total-Count')===(string)count($cancelled),'orders total count header');
 $byId=json_decode(req('GET','/staff/orders?q='.substr($ownOrderId,0,8))->getContent(),true);
 check(count($byId)===1 && $byId[0]['id']===$ownOrderId,'orders searched by id prefix');
+// ADM-06: staff can edit label (badge), fit and collection membership from the product editor.
+DB::table('collections')->insertOrIgnore([['slug'=>'summer','name'=>'مجموعة الصيف'],['slug'=>'winter','name'=>'مجموعة الشتاء']]);
+$bundleCatalog=json_decode(req('GET','/staff/catalog')->getContent(),true);
+check(isset($bundleCatalog['collections']) && count($bundleCatalog['collections'])>=2,'staff catalog lists collections');
+$editColor=(string)Illuminate\Support\Str::uuid();
+$editable=['id'=>null,'name'=>'Badged product','description'=>'With badge and fit','categoryId'=>DB::table('categories')->whereNotNull('parent_slug')->value('slug'),'price'=>45000,'published'=>true,
+ 'label'=>'NEW DROP','fit'=>'Oversized','collections'=>['summer'],
+ 'colorOptions'=>[['id'=>$editColor,'name'=>'Navy','hex'=>'#101840','images'=>[]]],'sizeOptions'=>['M','L'],
+ 'variants'=>[['colorId'=>$editColor,'size'=>'M','stock'=>4],['colorId'=>$editColor,'size'=>'L','stock'=>6]],'originalVariants'=>[]];
+$saved=req('POST','/staff/products',$editable);check($saved->getStatusCode()===200,'product saved with badge, fit and collection');
+$badgedId=json_decode($saved->getContent(),true)['id'];
+$details=json_decode(DB::table('catalog_products')->where('id',$badgedId)->value('details'),true);
+check(($details['label']??'')==='NEW DROP' && ($details['fit']??'')==='Oversized','badge and fit persisted');
+check(DB::table('collection_product')->where('product_id',$badgedId)->pluck('collection_slug')->all()===['summer'],'collection membership saved');
+$fromCatalog=collect(json_decode(req('GET','/staff/catalog')->getContent(),true)['products'])->firstWhere('id',$badgedId);
+check(($fromCatalog['label']??'')==='NEW DROP' && ($fromCatalog['collections']??[])===['summer'],'staff catalog returns badge and collections');
+$editable['id']=$badgedId;$editable['collections']=['winter'];$editable['label']='';
+$editable['originalVariants']=DB::table('variants')->where('product_id',$badgedId)->orderBy('sku')->get()->map(fn($v)=>['sku'=>$v->sku,'stock'=>(int)$v->stock])->all();
+check(req('POST','/staff/products',$editable)->getStatusCode()===200,'product collections reassigned');
+check(DB::table('collection_product')->where('product_id',$badgedId)->pluck('collection_slug')->all()===['winter'],'old collection membership removed');
+$storefront=json_decode(req('GET','/api/v1/products')->getContent(),true);
+$public=collect($storefront['products'])->firstWhere('id',$badgedId);
+check(($public['collections']??[])===['winter'],'storefront sees the new collection');
+// ADM-07: a colour/size that has sold cannot be silently dropped from the product.
+DB::table('variants')->where('product_id',$badgedId)->where('size','M')->update(['sku'=>'badged-sold-sku']);
+DB::table('inventory_movements')->insert(['sku'=>'badged-sold-sku','order_id'=>$ownOrderId,'quantity'=>-1,'reason'=>'sale','created_at'=>now()]);
+$shrunk=$editable;$shrunk['sizeOptions']=['L'];
+$shrunk['variants']=[['colorId'=>$editColor,'size'=>'L','stock'=>6]];
+$shrunk['originalVariants']=DB::table('variants')->where('product_id',$badgedId)->orderBy('sku')->get()->map(fn($v)=>['sku'=>$v->sku,'stock'=>(int)$v->stock])->all();
+check(req('POST','/staff/products',$shrunk)->getStatusCode()===409,'cannot remove a sold variant');
+check(DB::table('variants')->where('sku','badged-sold-sku')->exists(),'sold variant kept after refused edit');
 echo "Completed ".$checks." isolated checks.".PHP_EOL;

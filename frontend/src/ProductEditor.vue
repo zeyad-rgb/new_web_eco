@@ -5,7 +5,7 @@ import type { Category } from './taxonomy'
 import { categoryPath, categoryRows } from './taxonomy'
 import type { EditableProduct, ColorOption, ProductStock } from './product-options'
 
-const props = defineProps<{ draftKey: string; initial: EditableProduct; categories: Category[]; demo: boolean; csrf: string; busy: boolean }>()
+const props = defineProps<{ draftKey: string; initial: EditableProduct; categories: Category[]; collections?: { slug: string; name: string }[]; demo: boolean; csrf: string; busy: boolean }>()
 const emit = defineEmits<{ save: [product: EditableProduct, original: ProductStock[]]; cancel: [] }>()
 const product = ref<EditableProduct>(structuredClone(JSON.parse(JSON.stringify(props.initial))))
 const colors = ref<ColorOption[]>(props.initial.colorOptions?.length
@@ -19,6 +19,14 @@ for (const color of colors.value) for (const variant of props.initial.variants.f
 const colorName = ref('')
 const colorHex = ref('#222222')
 const sizeName = ref('')
+// Marketing fields stored in catalog_products.details and shown on the storefront.
+const selectedCollections = ref<string[]>([...(props.initial.collections ?? [])])
+const FIT_OPTIONS = ['', 'Slim', 'Regular', 'Relaxed', 'Oversized']
+function toggleCollection(slug: string) {
+  const index = selectedCollections.value.indexOf(slug)
+  if (index === -1) selectedCollections.value.push(slug)
+  else selectedCollections.value.splice(index, 1)
+}
 const error = ref('')
 const uploading = ref(false)
 const progress = ref('')
@@ -44,15 +52,16 @@ try {
       colors.value = draft.colors
       sizes.value = draft.sizes
       quantities.value = draft.quantities || {}
+      selectedCollections.value = draft.collections || selectedCollections.value
       originalVariants.value = draft.originalVariants
       draftNotice.value = 'Draft restored, including uploaded images. Review before saving.'
     }
   }
 } catch { draftNotice.value = 'Draft could not be restored. Please review the product.' }
-watch([product, colors, sizes, quantities], () => {
+watch([product, colors, sizes, quantities, selectedCollections], () => {
   if (saved) return
   try {
-    sessionStorage.setItem(props.draftKey, JSON.stringify({ version: 1, savedAt: Date.now(), product: product.value, colors: colors.value, sizes: sizes.value, quantities: quantities.value, originalVariants: originalVariants.value }))
+    sessionStorage.setItem(props.draftKey, JSON.stringify({ version: 1, savedAt: Date.now(), product: product.value, colors: colors.value, sizes: sizes.value, quantities: quantities.value, collections: selectedCollections.value, originalVariants: originalVariants.value }))
     if (!draftNotice.value.startsWith('Draft restored')) draftNotice.value = 'Draft saved on this tab.'
   } catch { draftNotice.value = 'Draft could not be saved on this device. Keep this page open until saving.' }
 }, { deep: true, flush: 'sync' })
@@ -151,7 +160,13 @@ function save() {
     return { sku: old?.sku, colorId: color.id, color: color.name, size, stock: quantities.value[color.id + ':' + size] ?? 0 }
   }))
   if (variants.some(item => !Number.isInteger(item.stock) || item.stock < 0 || item.stock > 1000000)) { error.value = 'راجع كميات المخزون.'; return }
-  emit('save', { ...product.value, colorOptions: colors.value, sizeOptions: sizes.value, variants }, originalVariants.value)
+  emit('save', {
+    ...product.value,
+    label: (product.value.label ?? '').trim(),
+    fit: product.value.fit ?? '',
+    collections: [...selectedCollections.value],
+    colorOptions: colors.value, sizeOptions: sizes.value, variants,
+  }, originalVariants.value)
 }
 </script>
 
@@ -210,6 +225,24 @@ function save() {
       <section class="editor-card"><h2>التنظيم والسعر</h2>
         <label>التصنيف<select v-model="product.categoryId" required :disabled="busy"><option value="">اختار التصنيف</option><option v-for="{category,path} in pathOptions" :key="category.slug" :value="category.slug">{{ path.map(item => item.name).join(' ← ') }}</option></select></label>
         <label>السعر بالجنيه<input :value="product.price / 100" @input="product.price = Math.round(Number(($event.target as HTMLInputElement).value) * 100)" required type="number" min="0.01" max="1000000" step="0.01" :disabled="busy"></label>
+      </section>
+      <section class="editor-card"><h2>العرض في المتجر</h2>
+        <label>شارة المنتج (Badge)
+          <input v-model.trim="product.label" maxlength="40" placeholder="مثال: وصل حديثاً" :disabled="busy">
+          <small>تظهر على كارت المنتج في المتجر. اتركها فارغة بدون شارة.</small>
+        </label>
+        <label>القَصّة (Fit)
+          <select v-model="product.fit" :disabled="busy">
+            <option v-for="option in FIT_OPTIONS" :key="option" :value="option">{{ option || 'بدون تحديد' }}</option>
+          </select>
+        </label>
+        <fieldset v-if="collections?.length" :disabled="busy" class="collections-field">
+          <legend>المجموعات</legend>
+          <label v-for="group in collections" :key="group.slug" class="collection-check">
+            <input type="checkbox" :value="group.slug" :checked="selectedCollections.includes(group.slug)" @change="toggleCollection(group.slug)">
+            <span>{{ group.name }}</span>
+          </label>
+        </fieldset>
       </section>
       <p v-if="progress" role="status">{{ progress }}</p>
       <button class="primary wide" :disabled="busy || uploading">احفظ المنتج</button><button type="button" :disabled="busy || uploading" @click="emit('cancel')">إلغاء</button>
