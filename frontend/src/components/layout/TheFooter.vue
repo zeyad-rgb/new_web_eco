@@ -1,9 +1,27 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useLocaleStore } from '../../stores/locale'
+
+const locale = useLocaleStore()
+const en = computed(() => locale.locale === 'en')
+</script>
+
 <template>
-<footer class="cap-footer" dir="ltr">
+<footer class="cap-footer" :dir="en ? 'ltr' : 'rtl'">
  <router-link to="/" class="footer-brand" aria-label="Studio Active home">STUDIO ACTIVE</router-link>
- <nav aria-label="Footer navigation"><router-link to="/shop">SHOP</router-link><router-link to="/faq">CONTACT & HELP</router-link><router-link to="/about">ABOUT US</router-link><router-link to="/login">MY ACCOUNT</router-link></nav>
- <p>Copyright © 2026 — Studio Active</p>
- <div class="cap-legal"><router-link to="/shipping">Shipping</router-link><router-link to="/returns">Returns</router-link><router-link to="/privacy">Privacy</router-link><router-link to="/admin">Staff portal</router-link></div>
+ <nav :aria-label="en ? 'Footer navigation' : 'روابط الموقع'">
+  <router-link to="/shop">{{ en ? 'SHOP' : 'المتجر' }}</router-link>
+  <router-link to="/faq">{{ en ? 'CONTACT & HELP' : 'تواصل ومساعدة' }}</router-link>
+  <router-link to="/about">{{ en ? 'ABOUT US' : 'من نحن' }}</router-link>
+  <router-link to="/login">{{ en ? 'MY ACCOUNT' : 'حسابي' }}</router-link>
+ </nav>
+ <p>{{ en ? 'Copyright © 2026 — Studio Active' : 'جميع الحقوق محفوظة © ٢٠٢٦ — Studio Active' }}</p>
+ <div class="cap-legal">
+  <router-link to="/shipping">{{ en ? 'Shipping' : 'الشحن' }}</router-link>
+  <router-link to="/returns">{{ en ? 'Returns' : 'الاسترجاع' }}</router-link>
+  <router-link to="/privacy">{{ en ? 'Privacy' : 'الخصوصية' }}</router-link>
+  <router-link to="/admin">{{ en ? 'Staff portal' : 'بوابة الموظفين' }}</router-link>
+ </div>
 </footer>
 </template>
 <style scoped>

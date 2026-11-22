@@ -38,6 +38,40 @@ test.describe('home page', () => {
   })
 })
 
+test.describe('Arabic mode', () => {
+  test('uses an Arabic font, keeps headings large, and translates the chrome', async ({ page }) => {
+    await page.goto('/product/training-tee')
+    await page.waitForLoadState('networkidle')
+    if ((await page.locator('html').getAttribute('lang')) !== 'ar') {
+      await page.locator('.language-button').click()
+      await expect(page.locator('html')).toHaveAttribute('lang', 'ar')
+    }
+
+    const heading = page.locator('.product-options h1')
+    const style = await heading.evaluate((el) => {
+      const c = getComputedStyle(el)
+      return { font: c.fontFamily, size: parseFloat(c.fontSize), spacing: c.letterSpacing, transform: c.textTransform }
+    })
+    // Latin fonts have no Arabic glyphs; the browser's fallback is what looked broken.
+    expect(style.font, 'Arabic text must use the Arabic face').toContain('IBM Plex Sans Arabic')
+    expect(style.size, 'product heading must not be shrunk by the small-text rule').toBeGreaterThan(24)
+    expect(style.transform).toBe('none')
+
+    // Related cards share the class but must stay card-sized.
+    const cardTitle = page.locator('.related-grid .product-title').first()
+    if (await cardTitle.count()) {
+      expect(parseFloat(await cardTitle.evaluate((el) => getComputedStyle(el).fontSize))).toBeLessThan(20)
+    }
+
+    const footer = await page.locator('footer').innerText()
+    for (const english of ['CONTACT & HELP', 'ABOUT US', 'MY ACCOUNT', 'Staff portal']) {
+      expect(footer, `footer still shows "${english}" in Arabic`).not.toContain(english)
+    }
+    // The eyebrow showed the English product label in Arabic; it is the category now.
+    await expect(page.locator('.product-options .label')).not.toHaveText(/TRAINING TEE/)
+  })
+})
+
 test.describe('shop listing', () => {
   test('all product cards share one media height, so the grid stays aligned', async ({ page }) => {
     await page.goto('/shop')

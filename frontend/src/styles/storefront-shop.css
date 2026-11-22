@@ -327,3 +327,11 @@
 @media (prefers-reduced-motion: reduce) {
   .shop.listing * { transition: none !important; }
 }
+
+/* Arabic: undo the Latin display treatment (see storefront-pdp.css). */
+html[lang="ar"] .shop.listing :is(.heading h1, .heading span, .category-strip a, .filter-toggle,
+  .product-title, .product-badge, .product-choose, .listing-path, .chips-title) {
+  text-transform: none;
+  letter-spacing: 0;
+}
+html[lang="ar"] .shop.listing .heading h1 { line-height: 1.25; }

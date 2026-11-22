@@ -41,7 +41,7 @@ onBeforeUnmount(() => chooser.value?.close())
  </div>
  <div class="product-swatches" aria-label="Product colors"><button v-for="c in colors" :key="c" :aria-label="c" :aria-pressed="color === c" :style="{background:getColorHex(c,product.colorOptions)}" @click="color = c" /></div>
  <router-link class="product-title" :to="{path:'/product/'+product.id,query:{color}}">{{ locale.getProductName(product) }}</router-link>
- <p class="product-fit">{{ product.fit || product.label }}</p>
+ <p v-if="product.fit" class="product-fit">{{ locale.getFitName(product.fit) }}</p>
  <strong class="product-price">{{ formatMoney(product.price) }}</strong>
  <dialog ref="chooser" class="product-options-dialog" @click="($event.target === chooser) && close()" @close="trigger?.focus()">
   <div class="option-dialog-body">

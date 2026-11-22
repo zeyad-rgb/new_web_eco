@@ -634,6 +634,19 @@ export const useLocaleStore = defineStore('locale', () => {
     return product.name
   }
 
+  /** Fit values are stored in English ('Regular', 'Oversized'); show them in the page language. */
+  function getFitName(fit: string | undefined | null): string {
+    if (!fit) return ''
+    if (locale.value === 'en') return fit
+    const map: Record<string, string> = {
+      slim: 'قصة ضيقة',
+      regular: 'قصة عادية',
+      relaxed: 'قصة مريحة',
+      oversized: 'قصة واسعة',
+    }
+    return map[fit.trim().toLowerCase()] ?? fit
+  }
+
   function getCategoryName(category: { name: string; slug: string }): string {
     if (locale.value === 'en') {
       const map: Record<string, string> = {
@@ -668,5 +681,6 @@ export const useLocaleStore = defineStore('locale', () => {
     t,
     getProductName,
     getCategoryName,
+    getFitName,
   }
 })

@@ -71,7 +71,7 @@ html[lang="ar"] :is(h1, h2, h3, h4, .product-title, .hero-copy h1, .heading h1,
 
 /* Small UI text in Arabic needs a floor: 11-12px Latin is readable, the same
    size in Arabic is not. */
-html[lang="ar"] :is(.product-title, .product-fit, .product-price, .hero-kicker,
+html[lang="ar"] :is(.product-card-adv .product-title, .product-fit, .product-price, .hero-kicker,
                     .hero-foot, .collection-card span, .heading span,
                     .listing-path, .chips-title) {
   font-size: max(0.82rem, 1em);
@@ -839,7 +839,7 @@ img[loading=lazy].loaded, img:not([loading=lazy]) { opacity: 1; }
 @media(max-width:760px){.admin-shell{grid-template-columns:1fr}.admin-sidebar{position:relative;height:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.2rem;padding:.7rem}.admin-brand{grid-column:1/-1;padding-bottom:.6rem}.sidebar-label{grid-column:1/-1;padding:.55rem}.admin-sidebar>a:not(.admin-brand),.sidebar-bottom>a,.sidebar-bottom button{padding:.55rem;font-size:.78rem}.sidebar-bottom{grid-column:1/-1;display:flex;margin-top:.4rem}.workspace-topbar{height:48px;padding:0 1rem}}
 [data-theme="dark"] .admin-shell{background:#0a0a0a;color:#f5f5f5}[data-theme="dark"] .workspace-topbar,[data-theme="dark"] .admin-empty,[data-theme="dark"] .settings-label textarea{background:#161616;color:#f5f5f5;border-color:#303030}[data-theme="dark"] .admin-empty p{color:#b5b5b5}
 /* Al Capitano storefront foundation */
-html body{padding-bottom:0;background:#fff;--lime:#ddd;--paper:#fff;--ink:#111}
+html body{padding-bottom:0;background:var(--street-paper);--lime:#ddd;--paper:var(--street-paper);--ink:var(--street-ink)}
 .cap-header~main{min-height:65vh}#app>.cap-footer{margin-top:0}
 .cap-home .product-card{border:0;background:white}.cap-home .product-info{padding:12px 0}.cap-home .product-card .photo{border:0}.cap-home .product-info .outline{border-color:#111;background:white;color:#111}
 .reveal-pending{opacity:0;transform:translateY(22px)}

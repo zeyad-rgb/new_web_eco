@@ -133,8 +133,8 @@ function closeMenu(event: KeyboardEvent) { if(event.key === 'Escape') open.value
 <a v-if="catalog.whatsappSettings.enabled && whatsappUrl"
    class="whatsapp-fab"
    :href="whatsappUrl"
-   target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
-  <span class="whatsapp-label" dir="ltr">Chat with us</span>
+   target="_blank" rel="noopener noreferrer" :aria-label="locale.locale === 'en' ? 'Chat with us on WhatsApp' : 'كلمنا على واتساب'">
+  <span class="whatsapp-label">{{ locale.locale === 'en' ? 'Chat with us' : 'كلمنا' }}</span>
   <span class="whatsapp-icon">
     <svg viewBox="0 0 64 64" aria-hidden="true">
       <path fill="#fff" d="M32 6C17.64 6 6 17.64 6 32c0 5.05 1.45 9.77 3.95 13.76L6.2 58l12.5-3.68A25.84 25.84 0 0 0 32 58c14.36 0 26-11.64 26-26S46.36 6 32 6Zm0 47.18a21.1 21.1 0 0 1-10.77-2.94l-.77-.46-7.42 2.18 2.2-7.23-.5-.74A21.13 21.13 0 1 1 32 53.18Zm11.86-15.75c-.65-.32-3.84-1.89-4.44-2.11-.59-.21-1.02-.32-1.45.32-.43.65-1.67 2.11-2.05 2.54-.38.43-.76.48-1.41.16-.65-.32-2.74-1.01-5.22-3.22a19.5 19.5 0 0 1-3.61-4.49c-.38-.65-.04-1 .29-1.32.29-.29.65-.76.97-1.14.32-.38.43-.65.65-1.08.21-.43.11-.81-.05-1.14-.16-.32-1.45-3.49-1.99-4.78-.52-1.25-1.05-1.08-1.45-1.1h-1.24c-.43 0-1.14.16-1.73.81-.59.65-2.27 2.22-2.27 5.41s2.32 6.28 2.65 6.71c.32.43 4.57 6.98 11.08 9.79 1.55.67 2.76 1.07 3.7 1.37 1.55.49 2.96.42 4.08.26 1.24-.19 3.84-1.57 4.38-3.09.54-1.51.54-2.81.38-3.09-.16-.27-.59-.43-1.24-.75Z"/>

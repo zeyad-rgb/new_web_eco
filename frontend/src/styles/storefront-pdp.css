@@ -47,7 +47,7 @@
 .pdp-page .product-options {
   position: sticky;
   top: 1.5rem;
-  background: var(--pdp-surface);
+  background: transparent;
   border: 0;
   padding: 0;
   display: grid;
@@ -64,7 +64,7 @@
   border-block-end: 1px solid var(--pdp-line);
 }
 
-.pdp-page .label {
+.pdp-page .product-options .label {
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -76,12 +76,12 @@
 /* The title is the last thing in its block, so drop its trailing margin and
    let .product-header-row's padding set the distance to the rule. */
 .pdp-page .product-header-row > div { min-width: 0; }
-.pdp-page .product-header-row .product-title { margin-block-end: 0; }
+.pdp-page .product-options .product-header-row .product-title { margin-block-end: 0; }
 
 /* Keep the size-guide link clear of the floating WhatsApp button. */
 .pdp-page .option-header { padding-inline-end: 0.25rem; }
 
-.pdp-page .product-title {
+.pdp-page .product-options .product-title {
   font-size: clamp(1.75rem, 3.2vw, 2.6rem);
   line-height: 1.04;
   letter-spacing: -0.02em;
@@ -271,3 +271,24 @@
 @media (prefers-reduced-motion: reduce) {
   .pdp-page * { transition: none !important; }
 }
+
+/* The related grid reuses the shop's card styling so both pages match. */
+.pdp-page .related-grid .product-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-block: 0.75rem 0;
+  line-height: 1.35;
+}
+.pdp-page .related-grid .card-media-stage { aspect-ratio: 4 / 5; background: var(--pdp-stage); }
+
+/* Arabic: the Latin display treatment (uppercase, negative tracking, tight
+   leading) is more specific above than the global Arabic reset, so undo it
+   here. Uppercase does nothing to Arabic but the tracking breaks joins. */
+html[lang="ar"] .pdp-page :is(.product-options .product-title, .product-options .label,
+  .option-header, .accordion-trigger, .add-to-bag-btn, .related-section h2, .related-grid .product-title) {
+  text-transform: none;
+  letter-spacing: 0;
+}
+html[lang="ar"] .pdp-page .product-options .product-title { line-height: 1.3; }

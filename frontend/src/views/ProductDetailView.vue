@@ -206,7 +206,7 @@ const relatedProducts = computed(() => {
       <div class="product-options">
         <div class="product-header-row">
           <div>
-            <p v-if="product.label" class="label">{{ product.label }}</p>
+            <p v-if="breadcrumb.length" class="label">{{ locale.getCategoryName(breadcrumb[breadcrumb.length - 1]) }}</p>
             <h1 id="page-title" class="product-title">{{ locale.getProductName(product) }}</h1>
           </div>
           <button
@@ -319,7 +319,7 @@ const relatedProducts = computed(() => {
             </button>
             <div v-show="openAccordion === 'specs'" class="accordion-content">
               <ul>
-                <li><strong>{{ locale.locale === 'en' ? 'Fit:' : 'القصّة:' }}</strong> {{ product.fit || 'Regular Fit' }}</li>
+                <li><strong>{{ locale.locale === 'en' ? 'Fit:' : 'القصّة:' }}</strong> {{ locale.getFitName(product.fit || 'Regular') }}</li>
                 <li><strong>{{ locale.locale === 'en' ? 'Material:' : 'الخامة:' }}</strong> {{ locale.locale === 'en' ? 'Premium activewear cotton blend with breathable fibers' : 'قطن ممتاز مع ألياف مرنة عالية التهوية' }}</li>
                 <li><strong>{{ locale.locale === 'en' ? 'Purpose:' : 'الاستخدام:' }}</strong> {{ locale.locale === 'en' ? 'Ideal for gym training, running, and all-day movement' : 'مثالي لتمارين الجيم، الجري، والأنشطة اليومية' }}</li>
               </ul>
