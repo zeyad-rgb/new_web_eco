@@ -418,6 +418,10 @@ const visible = computed(() => {
   </section>
 </template>
 
+<!-- Listing layout and type; unscoped so it can reach the shared card and
+     .photo rules that live in store.css and ProductCard.vue. -->
+<style src="../styles/storefront-shop.css"></style>
+
 <style scoped>
 .active-chips-bar {
   display: flex;

@@ -1,4 +1,4 @@
-import { test, expect, expectClean } from './fixtures'
+import { test, expect, expectClean, noHorizontalScroll } from './fixtures'
 
 // Home, shop and product detail: structure, navigation and states.
 
@@ -35,6 +35,47 @@ test.describe('home page', () => {
     await page.waitForLoadState('networkidle')
     const section = page.locator('.featured')
     await expect(section.locator('.product-card-adv')).not.toHaveCount(0)
+  })
+})
+
+test.describe('shop listing', () => {
+  test('all product cards share one media height, so the grid stays aligned', async ({ page }) => {
+    await page.goto('/shop')
+    await page.waitForLoadState('networkidle')
+    const heights = await page.locator('.card-media-stage').evaluateAll((els) =>
+      els.map((el) => Math.round(el.getBoundingClientRect().height))
+    )
+    expect(heights.length).toBeGreaterThan(1)
+    expect(new Set(heights).size, `media boxes differ: ${heights.join(', ')}`).toBe(1)
+  })
+
+  test('only the active category chip is filled in', async ({ page }) => {
+    await page.goto('/shop')
+    await page.waitForLoadState('networkidle')
+    const current = page.locator('.category-strip a[aria-current="page"]')
+    await expect(current).toHaveCount(1)
+    await expect(current).toHaveText(/All Products|كل المنتجات/)
+  })
+
+  test('phone layout shows two columns with no overlap in the top bar @responsive', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/shop')
+    await page.waitForLoadState('networkidle')
+
+    const columns = await page.locator('.shop.listing .grid').evaluate((el) =>
+      getComputedStyle(el).gridTemplateColumns.split(' ').length
+    )
+    expect(columns, 'product grid columns on a phone').toBe(2)
+
+    // The announcement, "Visit us" and the language button used to sit on top
+    // of each other because each was absolutely positioned by percentage.
+    const boxes = await page.locator('.utility-bar > *').evaluateAll((els) =>
+      els.map((el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, text: (el.textContent || '').trim().slice(0, 16) } })
+    )
+    for (let i = 1; i < boxes.length; i++) {
+      expect(boxes[i].left, `"${boxes[i - 1].text}" overlaps "${boxes[i].text}"`).toBeGreaterThanOrEqual(boxes[i - 1].right - 1)
+    }
+    await noHorizontalScroll(page)
   })
 })
 

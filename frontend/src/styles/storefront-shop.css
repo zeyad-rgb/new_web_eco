@@ -1,0 +1,328 @@
+/* Studio Active — shop listing.
+   Same athletic direction as the product page: flat surfaces, one accent,
+   heavy uppercase display type, logical properties for RTL/LTR.
+   Shares the --pdp-* tokens defined in storefront-pdp.css. */
+
+.shop.listing {
+  --shop-ink: #0b0b0c;
+  --shop-ink-soft: #55575c;
+  --shop-line: #e2e2df;
+  --shop-stage: #f1f0ec;
+  --shop-accent: #d35a28;
+  max-width: 1480px;
+  padding-inline: clamp(1rem, 4vw, 3.5rem);
+  padding-block: 0 clamp(3rem, 6vw, 5rem);
+  color: var(--shop-ink);
+}
+
+.shop.listing .listing-path {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-block: 1.25rem;
+  color: var(--shop-ink-soft);
+}
+
+/* ---- Heading ----------------------------------------------------------- */
+.shop.listing .heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  padding-block-end: 1.25rem;
+}
+
+.shop.listing .heading h1 {
+  font-size: clamp(2rem, 5.5vw, 3.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  font-weight: 900;
+  margin: 0;
+}
+
+.shop.listing .heading span {
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shop-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Toolbar ----------------------------------------------------------- */
+.shop.listing .listing-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-block: 0.75rem 1.25rem;
+  border-block: 1px solid var(--shop-line);
+  margin-block-end: 1.75rem;
+}
+
+.shop.listing .category-strip {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.shop.listing .category-strip::-webkit-scrollbar { display: none; }
+
+/* Unselected chips are outlined; only the current one fills in, so the
+   active category is unambiguous (every chip used to read as selected). */
+.shop.listing .category-strip a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding-inline: 1rem;
+  border: 1px solid var(--shop-line);
+  background: #fff;
+  color: var(--shop-ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.shop.listing .category-strip a:hover { border-color: var(--shop-ink); }
+
+.shop.listing .category-strip a[aria-current='page'] {
+  background: var(--shop-ink);
+  border-color: var(--shop-ink);
+  color: #fff;
+}
+
+.shop.listing .filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.5rem;
+  padding-inline: 1.1rem;
+  background: #fff;
+  border: 1px solid var(--shop-ink);
+  border-radius: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.shop.listing .filter-toggle b {
+  display: grid;
+  place-items: center;
+  min-inline-size: 1.4rem;
+  block-size: 1.4rem;
+  background: var(--shop-accent);
+  color: #fff;
+  font-size: 0.72rem;
+}
+
+/* ---- Active filter chips ----------------------------------------------- */
+.shop.listing .active-chips-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-block-end: 1.5rem;
+}
+
+.shop.listing .chips-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shop-ink-soft);
+}
+
+.shop.listing .filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--shop-stage);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.shop.listing .filter-chip button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--shop-ink-soft);
+}
+.shop.listing .filter-chip button:hover { color: var(--shop-accent); }
+
+/* ---- Product grid ------------------------------------------------------ */
+.shop.listing .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: clamp(1rem, 2vw, 1.75rem) clamp(0.75rem, 1.5vw, 1.25rem);
+  align-items: start;
+}
+
+/* Every card keeps the same media box, with or without a photo, so the
+   grid stays on a baseline instead of going ragged. */
+.shop.listing .card-media-stage {
+  aspect-ratio: 4 / 5;
+  background: var(--shop-stage);
+}
+
+.shop.listing .card-media-stage img,
+.shop.listing .card-media-stage .photo {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  max-inline-size: none;
+  aspect-ratio: auto;
+}
+
+.shop.listing .product-card-adv { min-width: 0; }
+
+/* Title, fit and price read as one block under the image. */
+.shop.listing .product-title {
+  display: block;
+  margin-block-start: 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--shop-ink);
+  overflow-wrap: anywhere;
+}
+
+.shop.listing .product-fit {
+  margin-block: 0.2rem 0;
+  font-size: 0.78rem;
+  color: var(--shop-ink-soft);
+}
+
+.shop.listing .product-price {
+  display: block;
+  margin-block-start: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop.listing .product-badge {
+  position: absolute;
+  inset-block-start: 0.6rem;
+  inset-inline-start: 0.6rem;
+  z-index: 1;
+  padding: 0.3rem 0.6rem;
+  background: var(--shop-ink);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.shop.listing .product-swatches {
+  display: flex;
+  gap: 0.35rem;
+  margin-block-start: 0.6rem;
+}
+
+.shop.listing .product-swatches button {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  border-radius: 50%;
+  border: 1px solid #c9cac6;
+  padding: 0;
+  cursor: pointer;
+}
+
+.shop.listing .product-swatches button[aria-pressed='true'] {
+  outline: 1px solid var(--shop-ink);
+  outline-offset: 2px;
+}
+
+/* "Choose options" rides in on hover; on touch it is always available. */
+.shop.listing .product-choose {
+  position: absolute;
+  inset-inline: 0.6rem;
+  inset-block-end: 0.6rem;
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--shop-ink);
+  color: #fff;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(0.4rem);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.shop.listing .card-media-stage:hover .product-choose,
+.shop.listing .product-choose:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.shop.listing .product-choose:disabled { background: #76777a; cursor: not-allowed; }
+
+@media (hover: none) {
+  .shop.listing .product-choose { opacity: 1; transform: none; }
+}
+
+.shop.listing .product-heart {
+  position: absolute;
+  inset-block-start: 0.6rem;
+  inset-inline-end: 0.6rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border: 0;
+  border-radius: 50%;
+  background: #fffffff2;
+  cursor: pointer;
+}
+
+/* ---- Empty state ------------------------------------------------------- */
+.shop.listing .empty-state {
+  grid-column: 1 / -1;
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding-block: clamp(3rem, 8vw, 6rem);
+  text-align: center;
+  color: var(--shop-ink-soft);
+}
+
+/* ---- Mobile ------------------------------------------------------------ */
+@media (max-width: 640px) {
+  /* Two columns on phones: one full-width card per screen makes browsing
+     a long scroll with almost no products visible at a time. */
+  .shop.listing .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 0.75rem;
+  }
+  .shop.listing .product-title { font-size: 0.8rem; }
+  .shop.listing .product-fit,
+  .shop.listing .product-price { font-size: 0.75rem; }
+  .shop.listing .product-choose { font-size: 0.68rem; inset-inline: 0.4rem; inset-block-end: 0.4rem; }
+  .shop.listing .listing-toolbar { gap: 0.6rem; }
+  .shop.listing .category-strip { flex-wrap: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop.listing * { transition: none !important; }
+}
