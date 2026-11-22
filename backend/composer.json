@@ -13,5 +13,9 @@
       "App\\": "app/",
       "Database\\Seeders\\": "database/seeders/"
     }
+  },
+  "require-dev": {
+    "larastan/larastan": "^3.15",
+    "laravel/boost": "^2.10"
   }
 }

@@ -1,0 +1,18 @@
+# Gitleaks config: default rules + allowlist for generated/third-party paths
+# that are git-ignored (caches, dependencies, local tool scratch).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Ignored, generated, or third-party paths"
+paths = [
+  '''(^|/)backend/vendor/''',
+  '''(^|/)frontend/node_modules/''',
+  '''(^|/)backend/storage/framework/''',
+  '''(^|/)backend/bootstrap/cache/''',
+  '''(^|/)frontend/dist/''',
+  '''(^|/)frontend/build-review/''',
+  '''(^|/)\.tools/''',
+  '''(^|/)audit-reports/raw/''',
+  '''(^|/)\.asset-[0-9]+''',
+]

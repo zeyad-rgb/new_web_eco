@@ -1,0 +1,46 @@
+name: security
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 3 * * 1'
+permissions:
+  contents: read
+jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Gitleaks (full history)
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1 git /repo --no-banner --redact --config /repo/.gitleaks.toml
+  semgrep:
+    runs-on: ubuntu-latest
+    container: semgrep/semgrep:1.186.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep (PHP, Laravel, OWASP, TS, Dockerfile, secrets)
+        run: >
+          semgrep scan --error --metrics off
+          --config p/php --config p/laravel --config p/owasp-top-ten
+          --config p/typescript --config p/dockerfile --config p/secrets
+          --exclude StudioActive-preview.html
+          backend/app backend/routes backend/config backend/database frontend/src deploy .github
+  dependencies-and-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy (dependencies, misconfiguration, secrets)
+        run: |
+          docker run --rm -v "$PWD:/repo" aquasec/trivy:0.76.2 fs --scanners vuln,secret,misconfig \
+            --skip-dirs /repo/.tools --severity HIGH,CRITICAL --exit-code 1 /repo
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.4' }
+      - run: composer audit --locked
+        working-directory: backend
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: frontend
