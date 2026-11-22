@@ -3,7 +3,7 @@
 Arabic-first (RTL) sportswear storefront with a staff back office. Temporary project name; catalog is sample data.
 
 ## Architecture
-- **frontend/** — Vue 3 + TypeScript + Vite + Pinia (`pinia-plugin-persistedstate`), vue-router. Storefront views in `src/views/`, staff UI in `src/Admin.vue` / `ProductEditor.vue`. Dev proxy (`vite.config.ts`) forwards `/api /staff /customer /media /checkout/quote` to Laravel (`VITE_API_TARGET`, default `http://127.0.0.1:8008`).
+- **frontend/** — Vue 3 + TypeScript + Vite + Pinia (`pinia-plugin-persistedstate`), vue-router. Storefront views in `src/views/`, staff UI in `src/Admin.vue` / `ProductEditor.vue`. Dev proxy (`vite.config.ts`) forwards `/api /staff /customer /media /checkout/quote` to Laravel (`VITE_API_TARGET`, default `http://127.0.0.1:8009`, the port `backend/serve.ps1` uses).
 - **backend/** — Laravel 13 / PHP 8.4, Query Builder (no Eloquent models). Public API in `routes/api.php` (`/api/v1/products`, `/orders`, `/orders/track`); staff API as closures in `routes/web.php` under `/staff`; customer auth in `CustomerAuthController`. Services: `CheckoutPricing`, `OrderLifecycle`, `CustomerDirectory`, `WhatsAppService`; job `SendOrderConfirmation`.
 - **Data** — PostgreSQL 17 in production, SQLite locally/tests. Money is integer piastres. Stock per SKU in `variants`; `inventory_movements` ledger; orders idempotent by `request_id`; customer contact data encrypted.
 - **Payments** — cash on delivery only. No online gateway, webhooks, or refunds exist.
@@ -19,7 +19,7 @@ Arabic-first (RTL) sportswear storefront with a staff back office. Temporary pro
 | E2E (Playwright + axe, disposable `backend/database/e2e.sqlite`, ports 8018/5183) | `cd frontend && npm run test:e2e` |
 | Full automated audit → `audit-reports/raw/` | `python tools/audit/run_audit.py` (`--list`, or a group: `security backend frontend deps e2e perf`) |
 | Local k6 smoke | `k6 run tools/audit/k6-smoke.js` (`K6_BASE_URL`, local only) |
-| Dev servers | `cd backend && php artisan serve --port=8008` · `cd frontend && npm run dev` |
+| Dev servers | `powershell backend/serve.ps1` (port 8009) · `cd frontend && npm run dev` (port 5173) |
 
 Security tools on PATH: `gitleaks`, `trivy`, `semgrep`, `k6`. Docker is installed but the daemon is often not running.
 

@@ -16,7 +16,7 @@ export const php = process.env.PHP_BINARY || (() => {
 
 // E2E runs against a disposable SQLite database (backend/database/e2e.sqlite),
 // never the development or production database. See e2e/global-setup.ts.
-// Ports 8018/5183 keep it clear of a running dev stack (8008/5173).
+// Ports 8018/5183 keep it clear of a running dev stack (8009/5173).
 const backendDir = path.resolve(here, '../backend')
 const e2eDb = path.join(backendDir, 'database', 'e2e.sqlite').replace(/\\/g, '/')
 export const e2eEnv = {
