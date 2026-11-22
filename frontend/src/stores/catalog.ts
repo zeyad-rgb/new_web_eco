@@ -15,8 +15,10 @@ export const useCatalogStore = defineStore('catalog', () => {
   const productTypes = ref<ProductType[]>([])
   const collections = ref<Group[]>([])
   const shipping = ref(8500)
-  const shippingSettings = ref<any>({ fee: 8500, free_threshold: 80000, currency: 'EGP', estimated_days: '2-4 أيام عمل' })
-  const storefrontSettings = ref<any>({ announcement_text: 'Free shipping over 4000 EGP', visit_label: 'Visit Us', location_url: '' })
+  // Neutral defaults until /api/v1/products answers: no free-shipping promise is shown
+  // before the real store setting is known (free_threshold 0 hides it).
+  const shippingSettings = ref<any>({ fee: 8500, free_threshold: 0, currency: 'EGP', estimated_days: '2-4 أيام عمل' })
+  const storefrontSettings = ref<any>({ announcement_text: '', visit_label: 'Visit Us', location_url: '' })
   const whatsappSettings = ref<any>({ enabled: true, support_phone: '01000000000', welcome_message: 'Hello, I would like to ask about your products.' })
   const status = ref('')
   const loading = ref(false)
@@ -112,6 +114,11 @@ export const useCatalogStore = defineStore('catalog', () => {
       productTypes.value = data.productTypes || []
       collections.value = data.collections || []
       shipping.value = data.shipping || 8500
+      // Store settings come from the same response; without these the first visit in a
+      // tab showed the hard-coded defaults (4000 EGP banner, 800 EGP threshold, demo WhatsApp number).
+      shippingSettings.value = data.shippingSettings || shippingSettings.value
+      storefrontSettings.value = data.storefrontSettings || storefrontSettings.value
+      whatsappSettings.value = data.whatsappSettings || whatsappSettings.value
       lastLoadedAt.value = Date.now()
       invalidated = false
 

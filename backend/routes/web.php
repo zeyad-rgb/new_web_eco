@@ -500,6 +500,7 @@ Route::get('/media/{id}', static function (Request $request, string $id) {
 
 
 Route::get('/customer/session',[App\Http\Controllers\CustomerAuthController::class,'session'])->middleware('throttle:session');
+Route::get('/customer/orders',[App\Http\Controllers\CustomerAuthController::class,'orders'])->middleware('throttle:session');
 Route::post('/customer/register',[App\Http\Controllers\CustomerAuthController::class,'register'])->middleware('throttle:auth');
 
 Route::post('/customer/login',[App\Http\Controllers\CustomerAuthController::class,'login'])->middleware('throttle:auth');

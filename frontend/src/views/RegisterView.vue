@@ -4,11 +4,13 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/ui'
 import { useLocaleStore } from '../stores/locale'
+import { useFreeShippingText } from '../utils/shipping'
 
 const router = useRouter()
 const auth = useAuthStore()
 const ui = useUIStore()
 const locale = useLocaleStore()
+const freeShippingText = useFreeShippingText()
 
 const name = ref('')
 const email = ref('')
@@ -34,7 +36,7 @@ async function handleRegister() {
   try {
     await auth.register(name.value, email.value, phone.value, password.value)
     ui.showToast(
-      locale.locale === 'en' ? `Welcome ${name.value}! You received 100 welcome points 🎁` : `أهلاً بك يا ${name.value}! حصلت على ١٠٠ نقطة ترحيبية`,
+      locale.locale === 'en' ? `Welcome ${name.value}! Your account is ready.` : `أهلاً بك يا ${name.value}! حسابك جاهز.`,
       'success',
       '🎁'
     )
@@ -61,24 +63,20 @@ async function handleRegister() {
         </template>
       </p>
       <p class="brand-panel-desc">
-        {{ locale.locale === 'en' ? 'Create your account now to unlock exclusive member privileges in the fastest growing activewear community in Egypt.' : 'أنشئ حسابك الآن لتستمتع بمزايا العضوية الحصرية في أسرع مجتمع رياضي نمواً في مصر.' }}
+        {{ locale.locale === 'en' ? 'Create your account to save your details and follow every order.' : 'أنشئ حسابك لحفظ بياناتك ومتابعة كل طلباتك.' }}
       </p>
       <div class="brand-features">
         <div class="brand-feature">
-          <span class="brand-feature-icon">🎁</span>
-          <span>{{ locale.locale === 'en' ? '100 instant bonus points credited to your balance' : '١٠٠ نقطة ترحيبية فورية تُضاف لرصيدك' }}</span>
+          <span class="brand-feature-icon">📦</span>
+          <span>{{ locale.locale === 'en' ? 'See all your orders and track them in one place' : 'شوف كل طلباتك وتابعها من مكان واحد' }}</span>
         </div>
-        <div class="brand-feature">
-          <span class="brand-feature-icon">🏷️</span>
-          <span>{{ locale.locale === 'en' ? 'Extra 10% discount on your first order' : 'خصم ١٠٪ إضافي على أول طلب لك' }}</span>
-        </div>
-        <div class="brand-feature">
+        <div v-if="freeShippingText" class="brand-feature">
           <span class="brand-feature-icon">🚚</span>
-          <span>{{ locale.locale === 'en' ? 'Free express shipping for members over 800 EGP' : 'شحن مجاني وسريع للأعضاء فوق ٨٠٠ جنيه' }}</span>
+          <span>{{ freeShippingText }}</span>
         </div>
         <div class="brand-feature">
-          <span class="brand-feature-icon">⚡</span>
-          <span>{{ locale.locale === 'en' ? 'Priority access to limited activewear drops' : 'أولوية الوصول للتشكيلات الحصرية والمحدودة' }}</span>
+          <span class="brand-feature-icon">💵</span>
+          <span>{{ locale.locale === 'en' ? 'Cash on delivery' : 'الدفع عند الاستلام' }}</span>
         </div>
       </div>
     </div>

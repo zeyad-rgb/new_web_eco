@@ -68,11 +68,11 @@ function navigateTo(path: string, query?: Record<string, string>) {
           <div class="user-avatar">👤</div>
           <div>
             <strong>{{ auth.user?.name }}</strong>
-            <small>{{ locale.locale === 'en' ? 'Club Tier' : 'رتبة' }} {{ auth.user?.clubTier }} · {{ auth.user?.points }} {{ locale.locale === 'en' ? 'pts' : 'نقطة' }}</small>
+            <small>{{ locale.locale === 'en' ? 'My account & orders' : 'حسابي وطلباتي' }}</small>
           </div>
         </div>
         <div v-else class="login-prompt">
-          <p>سجل دخولك للحصول على خصم ١٠٪ وشحن مجاني</p>
+          <p>{{ locale.locale === 'en' ? 'Sign in to follow your orders' : 'سجل دخولك لمتابعة طلباتك' }}</p>
           <div class="login-btns">
             <button type="button" class="login-btn" @click="navigateTo('/login')">
               تسجيل الدخول

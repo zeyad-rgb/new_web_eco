@@ -18,7 +18,7 @@ const isEnglish = () => locale.locale === 'en'
     <section class="hub-options" :aria-label="isEnglish() ? 'Account destinations' : 'اختيارات الحساب'">
       <router-link class="hub-card" to="/profile">
         <span class="hub-icon" aria-hidden="true">♙</span>
-        <span><strong>{{ isEnglish() ? 'My membership' : 'عضويتي' }}</strong><small>{{ isEnglish() ? 'Profile, points and account details' : 'الملف الشخصي والنقاط وبيانات الحساب' }}</small></span>
+        <span><strong>{{ isEnglish() ? 'My membership' : 'عضويتي' }}</strong><small>{{ isEnglish() ? 'Profile, orders and account details' : 'الملف الشخصي والطلبات وبيانات الحساب' }}</small></span>
         <span class="hub-arrow" aria-hidden="true">→</span>
       </router-link>
 

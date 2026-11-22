@@ -4,11 +4,13 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/ui'
 import { useLocaleStore } from '../stores/locale'
+import { useFreeShippingText } from '../utils/shipping'
 
 const router = useRouter()
 const auth = useAuthStore()
 const ui = useUIStore()
 const locale = useLocaleStore()
+const freeShippingText = useFreeShippingText()
 
 const email = ref('')
 const password = ref('')
@@ -106,20 +108,20 @@ function handleForgot() {
         </template>
       </p>
       <p class="brand-panel-desc">
-        {{ locale.locale === 'en' ? 'Sign in to track your shipments, earn club points, and access member-exclusive activewear drops.' : 'سجّل دخولك لمتابعة طلباتك، كسب نقاط المكافآت، والاستمتاع بعروض حصرية للأعضاء.' }}
+        {{ locale.locale === 'en' ? 'Sign in to see your orders and track your shipments.' : 'سجّل دخولك لمتابعة طلباتك وشحناتك.' }}
       </p>
       <div class="brand-features">
         <div class="brand-feature">
-          <span class="brand-feature-icon">🏆</span>
-          <span>{{ locale.locale === 'en' ? 'Earn reward points with every purchase' : 'اكسب نقاط مع كل طلب واستبدلها بخصومات' }}</span>
+          <span class="brand-feature-icon">📦</span>
+          <span>{{ locale.locale === 'en' ? 'See all your orders and track them in one place' : 'شوف كل طلباتك وتابعها من مكان واحد' }}</span>
         </div>
-        <div class="brand-feature">
+        <div v-if="freeShippingText" class="brand-feature">
           <span class="brand-feature-icon">🚚</span>
-          <span>{{ locale.locale === 'en' ? 'Free express shipping on orders over 800 EGP' : 'شحن مجاني للأعضاء فوق ٨٠٠ جنيه' }}</span>
+          <span>{{ freeShippingText }}</span>
         </div>
         <div class="brand-feature">
-          <span class="brand-feature-icon">⚡</span>
-          <span>{{ locale.locale === 'en' ? 'Early access to limited edition drops' : 'وصول مبكر للتشكيلات الجديدة' }}</span>
+          <span class="brand-feature-icon">💵</span>
+          <span>{{ locale.locale === 'en' ? 'Cash on delivery' : 'الدفع عند الاستلام' }}</span>
         </div>
       </div>
     </div>

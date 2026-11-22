@@ -150,6 +150,15 @@ router.beforeEach(async (to, _from, next) => {
       return next('/login?redirect=' + encodeURIComponent(to.fullPath))
     }
   }
+  // CUST-01: the account page needs a live customer session on the server.
+  // The persisted copy in localStorage is never trusted on its own.
+  if (to.path === '/profile') {
+    const auth = useAuthStore()
+    if (auth.staffSession?.signedIn) return next('/admin/dashboard')
+    let signedIn = false
+    try { signedIn = await auth.refreshCustomer() } catch { auth.user = null }
+    if (!signedIn || auth.user?.role !== 'customer') return next('/login?redirect=/profile')
+  }
   next()
 })
 

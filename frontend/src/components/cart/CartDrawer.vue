@@ -12,7 +12,8 @@ const cart = useCartStore()
 const locale = useLocaleStore()
 
 // Synced with the encrypted server setting in piastres.
-const freeShippingThreshold = computed(() => Number(catalog.shippingSettings?.free_threshold || 80000))
+// 0 = the store has no free-shipping offer (or settings not loaded yet): the meter is hidden.
+const freeShippingThreshold = computed(() => Number(catalog.shippingSettings?.free_threshold || 0))
 
 const lines = computed(() => cart.getResolvedLines(catalog.products))
 const subtotal = computed(() => cart.subtotal(catalog.products))
@@ -71,7 +72,7 @@ function goToShop() {
       </div>
 
       <!-- Free Shipping Bar (Adidas Style) -->
-      <div class="shipping-meter">
+      <div v-if="freeShippingThreshold > 0" class="shipping-meter">
         <p v-if="freeShippingRemaining > 0" class="shipping-meter-text">
           <template v-if="locale.locale === 'en'">
             Add <strong>{{ formatMoney(freeShippingRemaining) }}</strong> more for <strong>FREE shipping</strong>!

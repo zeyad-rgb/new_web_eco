@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useFavoritesStore } from '../stores/favorites'
@@ -7,6 +7,7 @@ import { useCartStore } from '../stores/cart'
 import { useUIStore } from '../stores/ui'
 import { useLocaleStore } from '../stores/locale'
 import { formatMoney } from '../utils/money'
+import { useFreeShippingText } from '../utils/shipping'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -29,17 +30,54 @@ const trackingResult = ref<{
 } | null>(null)
 const trackingError = ref('')
 
-const tierLabel = computed(() => {
-  const tier = auth.user?.clubTier || 'silver'
-  if (locale.isRTL) {
-    if (tier.toLowerCase().includes('gold') || tier === 'ذهبي') return 'ذهبي'
-    if (tier.toLowerCase().includes('bronze') || tier === 'برونزي') return 'برونزي'
-    return 'فضي'
-  }
-  if (tier.toLowerCase().includes('gold') || tier === 'ذهبي') return 'GOLD'
-  if (tier.toLowerCase().includes('bronze') || tier === 'برونزي') return 'BRONZE'
-  return 'SILVER'
+const freeShippingText = useFreeShippingText()
+
+// CUST-07: "2026-11-22 04:39:43" → "نوفمبر ٢٠٢٦" / "November 2026"
+const memberSince = computed(() => {
+  const raw = auth.user?.joinedDate
+  const date = raw ? new Date(String(raw).replace(' ', 'T')) : null
+  if (!date || Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat(locale.isRTL ? 'ar-EG' : 'en-GB', { month: 'long', year: 'numeric' }).format(date)
 })
+
+// CUST-06: the customer's own orders (server-side, session-scoped).
+type MyOrder = { id: string; created_at: string; status: string; total: number; items_count: number }
+const myOrders = ref<MyOrder[]>([])
+const ordersLoading = ref(true)
+const ordersError = ref(false)
+const statusLabels: Record<string, [string, string]> = {
+  processing: ['قيد التجهيز', 'Processing'],
+  shipped: ['تم الشحن', 'Shipped'],
+  delivered: ['تم التوصيل', 'Delivered'],
+  cancelled: ['ملغي', 'Cancelled'],
+  returned: ['مرتجع', 'Returned'],
+}
+const statusLabel = (status: string) => (statusLabels[status] ?? [status, status])[locale.isRTL ? 0 : 1]
+const orderDate = (value: string) => {
+  const date = new Date(String(value).replace(' ', 'T'))
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(locale.isRTL ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(date)
+}
+
+async function loadMyOrders() {
+  ordersLoading.value = true
+  ordersError.value = false
+  try {
+    const res = await fetch('/customer/orders', { credentials: 'include', headers: { Accept: 'application/json' } })
+    if (!res.ok) throw new Error(String(res.status))
+    myOrders.value = (await res.json()).orders ?? []
+  } catch {
+    ordersError.value = true
+  } finally {
+    ordersLoading.value = false
+  }
+}
+
+function trackOrder(id: string) {
+  trackOrderId.value = id
+  void handleTrackOrder()
+}
+
+onMounted(loadMyOrders)
 
 async function handleTrackOrder() {
   if (!trackOrderId.value.trim()) return
@@ -77,25 +115,14 @@ async function handleLogout() {
 <template>
   <section class="profile-page" aria-labelledby="page-title">
     <div class="profile-container">
-      <!-- Member Status Card (Adidas adiClub Style) -->
+      <!-- Account header. Points and tiers return here once a loyalty programme exists (CUST-03). -->
       <div class="club-card">
         <div class="club-badge-row">
-          <span class="club-tag">{{ locale.t('profile.club_title') }}</span>
-          <span class="tier-badge">{{ tierLabel }}</span>
+          <span class="club-tag">{{ locale.isRTL ? 'حسابي' : 'My account' }}</span>
         </div>
 
-        <h2>{{ locale.t('profile.welcome', { name: auth.user?.name || (locale.isRTL ? 'البطل الرياضي' : 'Active Member') }) }}</h2>
-        <p class="member-since">{{ locale.t('profile.member_since', { date: auth.user?.joinedDate || (locale.isRTL ? 'نوفمبر ٢٠٢٦' : 'Nov 2026') }) }}</p>
-
-        <div class="points-box">
-          <div class="points-val">
-            <strong>{{ auth.user?.points ?? 350 }}</strong>
-            <small>{{ locale.t('profile.reward_points') }}</small>
-          </div>
-          <p class="points-hint">
-            {{ locale.t('profile.points_hint') }}
-          </p>
-        </div>
+        <h2>{{ locale.t('profile.welcome', { name: auth.user?.name ?? '' }) }}</h2>
+        <p v-if="memberSince" class="member-since">{{ locale.t('profile.member_since', { date: memberSince }) }}</p>
       </div>
 
       <!-- Quick Action Cards Grid -->
@@ -104,15 +131,15 @@ async function handleLogout() {
           <h3>{{ locale.t('profile.account_info') }}</h3>
           <div class="info-row">
             <span>{{ locale.t('profile.name') }}</span>
-            <strong>{{ auth.user?.name || (locale.isRTL ? 'عميل تجريبي' : 'Demo Customer') }}</strong>
+            <strong>{{ auth.user?.name }}</strong>
           </div>
           <div class="info-row">
             <span>{{ locale.t('profile.email') }}</span>
-            <strong dir="ltr">{{ auth.user?.email || 'user@example.com' }}</strong>
+            <strong dir="ltr">{{ auth.user?.email }}</strong>
           </div>
           <div class="info-row">
             <span>{{ locale.t('profile.phone') }}</span>
-            <strong dir="ltr">{{ auth.user?.phone || '01000000000' }}</strong>
+            <strong dir="ltr">{{ auth.user?.phone }}</strong>
           </div>
         </div>
 
@@ -132,29 +159,54 @@ async function handleLogout() {
         </div>
       </div>
 
-      <!-- Member Benefits Bar -->
+      <!-- My orders (CUST-06): read from /customer/orders, newest first -->
+      <div class="benefits-card my-orders-card">
+        <h3>{{ locale.isRTL ? 'طلباتي' : 'My orders' }}</h3>
+        <p v-if="ordersLoading" class="orders-note">{{ locale.isRTL ? 'جاري تحميل طلباتك…' : 'Loading your orders…' }}</p>
+        <p v-else-if="ordersError" class="orders-note">
+          {{ locale.isRTL ? 'تعذّر تحميل الطلبات.' : 'Could not load your orders.' }}
+          <button type="button" class="link-btn" @click="loadMyOrders">{{ locale.isRTL ? 'حاول مرة أخرى' : 'Try again' }}</button>
+        </p>
+        <p v-else-if="!myOrders.length" class="orders-note">
+          {{ locale.isRTL ? 'لا توجد طلبات بعد.' : 'No orders yet.' }}
+          <router-link to="/shop">{{ locale.isRTL ? 'ابدأ التسوق' : 'Start shopping' }}</router-link>
+        </p>
+        <ul v-else class="orders-list">
+          <li v-for="order in myOrders" :key="order.id" class="order-row" data-test="my-order">
+            <div>
+              <strong>{{ orderDate(order.created_at) }}</strong>
+              <small dir="ltr">#{{ order.id.slice(0, 8).toUpperCase() }} · {{ order.items_count }} {{ locale.isRTL ? 'قطعة' : 'items' }}</small>
+            </div>
+            <span class="order-status" :class="'status-' + order.status">{{ statusLabel(order.status) }}</span>
+            <strong class="order-total">{{ formatMoney(order.total) }}</strong>
+            <button type="button" class="link-btn" @click="trackOrder(order.id)">{{ locale.isRTL ? 'تتبع' : 'Track' }}</button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- What every customer gets. Only services the store actually provides (CUST-02/04). -->
       <div class="benefits-card">
-        <h3>{{ locale.t('profile.exclusive_benefits') }}</h3>
+        <h3>{{ locale.isRTL ? 'مزايا التسوق معنا' : 'Shopping with us' }}</h3>
         <div class="benefits-list">
-          <div class="benefit-item">
+          <div v-if="freeShippingText" class="benefit-item">
             <span>🚚</span>
             <div>
-              <strong>{{ locale.t('profile.free_shipping_benefit') }}</strong>
-              <small>{{ locale.t('profile.free_shipping_sub') }}</small>
+              <strong>{{ locale.isRTL ? 'شحن مجاني' : 'Free shipping' }}</strong>
+              <small>{{ freeShippingText }}</small>
             </div>
           </div>
           <div class="benefit-item">
-            <span>🎟</span>
+            <span>💵</span>
             <div>
-              <strong>{{ locale.t('profile.birthday_discount') }}</strong>
-              <small>{{ locale.t('profile.birthday_sub') }}</small>
+              <strong>{{ locale.isRTL ? 'الدفع عند الاستلام' : 'Cash on delivery' }}</strong>
+              <small>{{ locale.isRTL ? 'ادفع نقداً عند وصول طلبك' : 'Pay in cash when your order arrives' }}</small>
             </div>
           </div>
           <div class="benefit-item">
-            <span>⚡</span>
+            <span>📦</span>
             <div>
-              <strong>{{ locale.t('profile.early_access') }}</strong>
-              <small>{{ locale.t('profile.early_access_sub') }}</small>
+              <strong>{{ locale.isRTL ? 'تتبع طلباتك' : 'Order tracking' }}</strong>
+              <small>{{ locale.isRTL ? 'كل طلباتك وحالتها في مكان واحد' : 'All your orders and their status in one place' }}</small>
             </div>
           </div>
         </div>
@@ -223,6 +275,15 @@ async function handleLogout() {
 </template>
 
 <style scoped>
+.orders-note { color: #555; margin: 0; }
+.orders-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.order-row { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 1rem; padding: 0.9rem 1rem; border: 1px solid #e3e5df; border-radius: 6px; }
+.order-row small { display: block; color: #555; margin-top: 0.2rem; }
+.order-status { font-size: 0.8rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px; background: #eef0ea; color: #222; }
+.order-status.status-delivered { background: #dff3e4; color: #14532d; }
+.order-status.status-cancelled, .order-status.status-returned { background: #fde2e1; color: #7f1d1d; }
+.link-btn { background: none; border: 0; padding: 0; color: #1d4ed8; text-decoration: underline; cursor: pointer; font: inherit; }
+@media (max-width: 600px) { .order-row { grid-template-columns: 1fr auto; } }
 .profile-page {
   background: #f8f9f6;
   min-height: 80vh;

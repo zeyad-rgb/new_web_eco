@@ -50,14 +50,53 @@ test.describe('/profile page', () => {
     await page.goto('/register')
     const csrf = await csrfToken(page)
     expect((await page.request.post('/customer/register', { headers: { ...json, 'X-CSRF-TOKEN': csrf }, data: c })).status()).toBe(200)
-    await page.goto('/login') // App.vue refreshes the customer session on mount
-    await page.evaluate((u) => localStorage.setItem('ecomars_auth', JSON.stringify({ user: u })), { id: 'x', name: c.name, email: c.email, phone: c.phone, role: 'customer' })
+    // No localStorage seeding: the /profile route guard must restore the user from the server session.
     await page.goto('/profile')
+    await expect(page).toHaveURL(/\/profile$/)
     await expect(page.getByText(c.email)).toBeVisible()
     await expect(page.getByText(c.phone)).toBeVisible()
     await page.reload()
     await expect(page.getByText(c.email)).toBeVisible()
     await expectClean(problems)
+  })
+
+  test('lists the customer’s own orders and lets them track one (CUST-06)', async ({ page, problems }) => {
+    const c = newCustomer()
+    await page.goto('/register')
+    const csrf = await csrfToken(page)
+    expect((await page.request.post('/customer/register', { headers: { ...json, 'X-CSRF-TOKEN': csrf }, data: c })).status()).toBe(200)
+    await page.goto('/profile')
+    await expect(page.getByText(/No orders yet|لا توجد طلبات بعد/)).toBeVisible()
+
+    const session = await (await page.request.get('/customer/session', { headers: json })).json()
+    const order = await page.request.post('/api/v1/orders', { headers: { ...json, 'X-CSRF-TOKEN': session.csrf }, data: { request_id: randomUUID(), name: c.name, phone: c.phone, address: 'Giza - Dokki - street 3', items: [{ sku: 'training-tee-2-L', quantity: 2 }] } })
+    expect(order.status(), await order.text()).toBe(201)
+    const { id } = await order.json()
+
+    await page.reload()
+    const row = page.locator('[data-test="my-order"]')
+    await expect(row).toHaveCount(1)
+    await expect(row).toContainText(id.slice(0, 8).toUpperCase())
+    await row.getByRole('button').click()
+    await expect(page.locator('.tracking-result-box')).toBeVisible()
+    await expectClean(problems)
+  })
+
+  test('shows no placeholder or unfulfilled promises (CUST-02/03/04)', async ({ page }) => {
+    const c = newCustomer()
+    await page.goto('/register')
+    const csrf = await csrfToken(page)
+    expect((await page.request.post('/customer/register', { headers: { ...json, 'X-CSRF-TOKEN': csrf }, data: c })).status()).toBe(200)
+
+    for (const path of ['/profile', '/login', '/register']) {
+      if (path !== '/profile') await page.request.post('/staff/logout', { headers: { ...json, 'X-CSRF-TOKEN': (await (await page.request.get('/customer/session', { headers: json })).json()).csrf } })
+      await page.goto(path)
+      await page.waitForLoadState('networkidle')
+      const text = await page.locator('#app').innerText()
+      for (const claim of ['Demo Customer', 'SILVER', 'Reward Points', 'نقطة', 'points', '800', '10%', '١٠٪', 'Birthday', 'ميلادك']) {
+        expect(text, `${path} must not show "${claim}"`).not.toContain(claim)
+      }
+    }
   })
 
   test('tracks the customer’s own order', async ({ page }) => {
@@ -74,11 +113,10 @@ test.describe('/profile page', () => {
     expect((await page.request.post('/api/v1/orders/track', { headers: json, data: { order_id: randomUUID() } })).status()).toBe(404)
   })
 
-  // Known issues found in this audit (CUST-xx in audit-reports/CUSTOMER_ACCOUNT_AUDIT.md).
   test('anonymous visitor is redirected away from /profile (CUST-01)', async ({ page }) => {
-    test.fail(true, 'CUST-01: /profile has no route guard and renders placeholder data for anonymous visitors')
     await page.goto('/profile')
-    await expect(page).toHaveURL(/\/login/)
+    await expect(page).toHaveURL(/\/login\?redirect=/)
+    await expect(page.getByText('Demo Customer')).toHaveCount(0)
   })
 
   test('profile does not show stale data after the server session ends', async ({ page }) => {

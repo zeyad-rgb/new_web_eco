@@ -80,4 +80,17 @@ DB::table('catalog_staff')->where('email','demoted-admin@example.test')->update(
 foreach($adminOnly as $path) check(req('GET',$path)->getStatusCode()===403,'demoted admin loses '.$path);
 $demotedBundle=json_decode(req('GET','/staff/bundle')->getContent(),true);
 check($demotedBundle['orders']===[] && $demotedBundle['whatsappQueue']===[],'demoted admin bundle hides orders');
+// CUST-06: customers see only their own orders, without contact details.
+req('POST','/staff/logout');
+check(req('GET','/customer/orders')->getStatusCode()===401,'anonymous cannot list customer orders');
+DB::table('variants')->insert(['sku'=>'cust-sku','product_id'=>'training-tee','color'=>'Black','size'=>'L','stock'=>5]);
+check(req('POST','/customer/register',['name'=>'Customer A','email'=>'customer-a@example.test','phone'=>'01011111111','password'=>'Customer-a-pass-123!'])->getStatusCode()===200,'customer A registers');
+$ownOrder=req('POST','/api/v1/orders',['request_id'=>(string)Illuminate\Support\Str::uuid(),'name'=>'Customer A','phone'=>'01011111111','address'=>'Cairo customer A street','items'=>[['sku'=>'cust-sku','quantity'=>2]]]);
+check($ownOrder->getStatusCode()===201,'customer A places an order');$ownOrderId=json_decode($ownOrder->getContent(),true)['id'];
+$listA=json_decode(req('GET','/customer/orders')->getContent(),true);
+check(count($listA['orders'])===1 && $listA['orders'][0]['id']===$ownOrderId && $listA['orders'][0]['items_count']===2 && $listA['orders'][0]['status']==='processing','customer A sees own order');
+check(!str_contains(json_encode($listA),'01011111111') && !str_contains(json_encode($listA),'Cairo customer A'),'order list has no contact details');
+req('POST','/staff/logout');
+check(req('POST','/customer/register',['name'=>'Customer B','email'=>'customer-b@example.test','phone'=>'01022222222','password'=>'Customer-b-pass-123!'])->getStatusCode()===200,'customer B registers');
+check(json_decode(req('GET','/customer/orders')->getContent(),true)['orders']===[],'customer B cannot see customer A orders');
 echo "Completed ".$checks." isolated checks.".PHP_EOL;
