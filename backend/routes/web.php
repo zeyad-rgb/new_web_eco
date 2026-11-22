@@ -170,7 +170,17 @@ Route::prefix('staff')->group(function (): void {
     Route::get('/orders', static function (Request $request) use ($authorizeAdmin) {
         $authorizeAdmin($request);
         $page=max(1,(int)$request->query('page',1));
-        $orders = DB::table('orders')->orderByDesc('created_at')->orderByDesc('id')->offset(($page-1)*50)->limit(50)->get();
+        // Server-side filters so staff can find orders beyond the first page. Customer name/phone
+        // are encrypted, so free-text search is limited to the order id prefix.
+        $query = DB::table('orders');
+        $status = (string) $request->query('status', '');
+        if (in_array($status, ['processing', 'shipped', 'delivered', 'cancelled', 'returned'], true)) {
+            $status === 'processing' ? $query->where(fn ($q) => $q->where('status', 'processing')->orWhereNull('status')) : $query->where('status', $status);
+        }
+        $q = strtolower(preg_replace('/[^0-9a-fA-F-]/', '', (string) $request->query('q', '')));
+        if ($q !== '') $query->where('id', 'like', $q.'%');
+        $total = (clone $query)->count();
+        $orders = $query->orderByDesc('created_at')->orderByDesc('id')->offset(($page-1)*50)->limit(50)->get();
         return response()->json($orders->map(static function ($order): array {
             $lines = json_decode($order->lines, true) ?: [];
             $customer = [];
@@ -190,7 +200,7 @@ Route::prefix('staff')->group(function (): void {
                 'items_count' => array_sum(array_column($lines, 'quantity')),
                 'lines' => $lines,
             ];
-        }))->header('Cache-Control', 'no-store')->header('X-Total-Count',(string)DB::table('orders')->count());
+        }))->header('Cache-Control', 'no-store')->header('X-Total-Count',(string)$total);
     });
 
     Route::put('/orders/{id}/status', static function (Request $request, string $id) use ($authorize, $staff, $logAudit) {
@@ -240,6 +250,10 @@ Route::prefix('staff')->group(function (): void {
         $authorize($request);
         $currentStaff = $staff($request);
         abort_unless($currentStaff && $currentStaff->role === 'admin', 403, 'حذف المنتجات مقصور على مسؤول النظام.');
+        // A product with sales history keeps its variants: deleting them would make old
+        // orders impossible to cancel or return (stock restore needs the SKU). Unpublish instead.
+        $sold = DB::table('inventory_movements')->whereIn('sku', DB::table('variants')->where('product_id', $id)->select('sku'))->exists();
+        abort_if($sold, 409, 'هذا المنتج له طلبات سابقة ولا يمكن حذفه. حوّله إلى مسودة لإخفائه من المتجر.');
 
         DB::transaction(static function () use ($id, $currentStaff, $request, $logAudit): void {
             DB::table('variants')->where('product_id', $id)->delete();

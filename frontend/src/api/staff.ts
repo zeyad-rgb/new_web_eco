@@ -1,15 +1,15 @@
 import { useAuthStore } from '../stores/auth'
 
-export async function staffRequest(path: string, options: RequestInit = {}): Promise<any> {
+async function send(path: string, options: RequestInit): Promise<{ body: any; response: Response }> {
   const auth = useAuthStore()
-  const send = () => {
+  const attempt = () => {
     const headers = new Headers(options.headers)
     headers.set('Accept', 'application/json')
     if (options.method && options.method !== 'GET') headers.set('X-CSRF-TOKEN', auth.csrfToken)
     return fetch('/staff/' + path, { ...options, headers, credentials: 'include' })
   }
-  let response = await send()
-  if (response.status === 419 && await auth.checkStaffSession()) response = await send()
+  let response = await attempt()
+  if (response.status === 419 && await auth.checkStaffSession()) response = await attempt()
   const body = await response.json().catch(() => null)
   if (!response.ok) {
     const details = Object.values(body?.errors || {}).flat().filter((value): value is string => typeof value === 'string')
@@ -19,5 +19,16 @@ export async function staffRequest(path: string, options: RequestInit = {}): Pro
       : body?.message || `Request failed (${response.status}). Check the backend connection.`
     throw new Error(message)
   }
-  return body
+  return { body, response }
+}
+
+export async function staffRequest(path: string, options: RequestInit = {}): Promise<any> {
+  return (await send(path, options)).body
+}
+
+/** GET a paginated staff list; `total` comes from the X-Total-Count header when the API sends it. */
+export async function staffList<T = any>(path: string): Promise<{ items: T[]; total: number | null }> {
+  const { body, response } = await send(path, {})
+  const header = response.headers.get('X-Total-Count')
+  return { items: Array.isArray(body) ? body : [], total: header === null ? null : Number(header) }
 }

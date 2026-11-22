@@ -93,4 +93,15 @@ check(!str_contains(json_encode($listA),'01011111111') && !str_contains(json_enc
 req('POST','/staff/logout');
 check(req('POST','/customer/register',['name'=>'Customer B','email'=>'customer-b@example.test','phone'=>'01022222222','password'=>'Customer-b-pass-123!'])->getStatusCode()===200,'customer B registers');
 check(json_decode(req('GET','/customer/orders')->getContent(),true)['orders']===[],'customer B cannot see customer A orders');
+// ADM-03: a product that has sold must not be hard-deleted (old orders could no longer be cancelled/returned).
+check(req('POST','/staff/dispatch-login',['email'=>'zeyadmahmoud159@gmail.com','password'=>'Correct-password-123!'])->getStatusCode()===200,'admin signs back in');
+check(req('DELETE','/staff/products/training-tee')->getStatusCode()===409,'sold product cannot be deleted');
+check(DB::table('catalog_products')->where('id','training-tee')->exists() && DB::table('variants')->where('sku','cust-sku')->exists(),'sold product and variants kept');
+check(req('DELETE','/staff/products/'.$productId)->getStatusCode()===200,'unsold product can be deleted');
+// ADM-04: server-side order filters work across all pages.
+$filtered=req('GET','/staff/orders?status=cancelled');$cancelled=json_decode($filtered->getContent(),true);
+check(count($cancelled)>=1 && count(array_filter($cancelled,fn($o)=>$o['status']!=='cancelled'))===0,'orders filtered by status');
+check($filtered->headers->get('X-Total-Count')===(string)count($cancelled),'orders total count header');
+$byId=json_decode(req('GET','/staff/orders?q='.substr($ownOrderId,0,8))->getContent(),true);
+check(count($byId)===1 && $byId[0]['id']===$ownOrderId,'orders searched by id prefix');
 echo "Completed ".$checks." isolated checks.".PHP_EOL;

@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ProductEditor from './ProductEditor.vue'
-import { staffRequest } from './api/staff'
+import { staffList, staffRequest } from './api/staff'
 import type { EditableProduct, ProductStock } from './product-options'
 import { categoryBranch, categoryPath, categoryRows, type Category, type ProductType } from './taxonomy'
 import { useCatalogStore } from './stores/catalog'
@@ -36,6 +36,9 @@ const products = ref<Product[]>([])
 const orders = ref<any[]>([])
 const orderPage = ref(1)
 const customerPage = ref(1)
+const PAGE_SIZE = 50
+const ordersTotal = ref<number | null>(null)
+const customersTotal = ref<number | null>(null)
 const analytics = ref<{ revenue: number; processing: number } | null>(null)
 const customers = ref<any[]>([])
 const auditEvents = ref<any[]>([])
@@ -47,7 +50,8 @@ const ready = ref(false)
 const busy = ref(false)
 const notice = ref('')
 const error = ref('')
-const staffRole = ref(auth.staffSession?.role || 'admin')
+const staffRole = ref(auth.staffSession?.role || '')
+const isAdminRole = computed(() => staffRole.value === 'admin')
 let csrf = ''
 
 // WhatsApp Queue State
@@ -93,20 +97,17 @@ interface StoreSettings {
 
 const defaultSettings: StoreSettings = {
   storefront: {
-    announcement_text: 'Free shipping over 4000 EGP',
+    announcement_text: '',
     visit_label: 'Visit Us',
     location_url: '',
   },
   shipping: { fee: 8500, free_threshold: 80000, currency: 'EGP', express_available: true, estimated_days: '2-4 أيام عمل' },
   payment_methods: { cash_on_delivery: true, card: false, instapay: false, vodafone_cash: false },
-  discounts: [
-    { code: 'WELCOME10', percent: 10, min_spend: 30000, active: true },
-    { code: 'STUDIO20', percent: 20, min_spend: 100000, active: true }
-  ],
+  discounts: [],
   whatsapp: {
     enabled: true,
     provider: 'direct_link',
-    support_phone: '01000000000',
+    support_phone: '',
     webhook_url: '',
     api_token: '',
     instance_id: '',
@@ -116,6 +117,9 @@ const defaultSettings: StoreSettings = {
 }
 
 const settings = ref<StoreSettings>(structuredClone(defaultSettings))
+// Saving is only allowed after the real settings were read from the server; otherwise the
+// form would hold defaults and overwrite the store's configuration (ADM-01).
+const settingsLoaded = ref(false)
 const newDiscount = ref({ code: '', percent: 10, min_spend: 50000, active: true })
 
 // Administrative customer data is never restored from browser storage.
@@ -166,8 +170,7 @@ const filteredOrders = computed(() =>
       (order.customer_name && order.customer_name.toLowerCase().includes(query)) ||
       (order.customer_phone && order.customer_phone.includes(query)) ||
       (order.customer_address && order.customer_address.toLowerCase().includes(query))
-    const matchStatus = !filterOrderStatus.value || order.status === filterOrderStatus.value
-    return matchQuery && matchStatus
+    return matchQuery
   })
 )
 
@@ -185,7 +188,7 @@ const inventoryMetrics = computed(() => {
   const published = products.value.filter(p => p.published)
   const drafts = products.value.filter(p => !p.published)
   const variants = products.value.flatMap(p => p.variants)
-  const lowStock = variants.filter(v => v.stock > 0 && v.stock <= 2)
+  const lowStock = variants.filter(v => v.stock > 0 && v.stock <= LOW_STOCK)
   const outOfStock = variants.filter(v => v.stock === 0)
   const totalRevenue = orders.value.reduce((sum, o) => sum + (o.status === 'delivered' ? o.total : 0), 0)
   const processingCount = orders.value.filter(o => o.status === 'processing').length
@@ -208,6 +211,15 @@ const inventoryMetrics = computed(() => {
     maxCategoryCount,
   }
 })
+
+// Variants that need restocking, most urgent first (dashboard panel).
+const LOW_STOCK = 2
+const restockList = computed(() =>
+  products.value
+    .flatMap((p) => p.variants.filter((v) => v.stock <= LOW_STOCK).map((v) => ({ product: p, color: v.color, size: v.size, stock: v.stock })))
+    .sort((a, b) => a.stock - b.stock)
+    .slice(0, 8)
+)
 
 // HTTP Request Utility with CSRF & Credentials
 async function request(path: string, data?: object, method = data ? 'POST' : 'GET') {
@@ -281,18 +293,26 @@ async function loadSection() {
   try {
     if (props.section === 'products') openEditor()
     if (props.section === 'orders' || props.section === 'dashboard') {
+      const params = new URLSearchParams({ page: String(orderPage.value) })
+      if (filterOrderStatus.value) params.set('status', filterOrderStatus.value)
+      const query = searchOrders.value.trim()
+      if (/^[0-9a-f-]{4,}$/i.test(query)) params.set('q', query)
       const [ord, wa] = await Promise.all([
-        request('orders?page=' + orderPage.value),
+        staffList('orders?' + params),
         request('whatsapp-queue')
       ])
-      orders.value = ord
+      orders.value = ord.items
+      ordersTotal.value = ord.total
       whatsappQueue.value = wa
     }
     if (props.section === 'customers') {
-      customers.value = await request('customers?page=' + customerPage.value)
+      const list = await staffList('customers?page=' + customerPage.value)
+      customers.value = list.items
+      customersTotal.value = list.total
     }
     if (props.section === 'settings' && staffRole.value === 'admin') {
       const values = await request('settings')
+      settingsLoaded.value = true
       if (Array.isArray(values) && values.length) {
         for (const item of values) {
           if (item.key === 'shipping' && item.value) settings.value.shipping = item.value
@@ -318,13 +338,28 @@ onMounted(async () => {
       await router.replace('/login')
     } else {
       openEditor()
-      if (props.section === 'customers' || props.section === 'audit') {
+      if (props.section !== 'products' && props.section !== 'dashboard') {
         void loadSection()
       }
     }
   })
   ready.value = true
 })
+
+// Status filter / id search query the server, starting from page 1.
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+watch([filterOrderStatus, searchOrders], () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => { orderPage.value = 1; void loadSection() }, 300)
+})
+const pageCount = (total: number | null, page: number, shown: number) => total === null ? (shown < PAGE_SIZE ? page : page + 1) : Math.max(1, Math.ceil(total / PAGE_SIZE))
+const orderPages = computed(() => pageCount(ordersTotal.value, orderPage.value, orders.value.length))
+const customerPages = computed(() => pageCount(customersTotal.value, customerPage.value, customers.value.length))
+function goToPage(kind: 'orders' | 'customers', page: number) {
+  if (kind === 'orders') orderPage.value = page
+  else customerPage.value = page
+  void loadSection()
+}
 
 watch(() => [props.section, props.productId, props.initialCategory], () => {
   if (!ready.value) return // ⚡ Prevent double execution on initial mount
@@ -396,12 +431,25 @@ function deleteProduct(item: Product) {
   })
 }
 
-// Order Status Update
+// Order Status Update — options mirror the backend's allowed transitions (OrderLifecycle).
+const nextStatuses: Record<string, string[]> = {
+  processing: ['shipped', 'cancelled'],
+  shipped: ['delivered', 'returned'],
+  delivered: ['returned'],
+  cancelled: [],
+  returned: [],
+}
+const statusOptions = (status: string) => [status, ...(nextStatuses[status] ?? [])]
+
 function updateOrderStatus(order: any, newStatus: string) {
   return run(async () => {
+    if (newStatus === order.status) return
+    if ((newStatus === 'cancelled' || newStatus === 'returned') && !confirm(`تأكيد تغيير حالة الطلب #${order.id.slice(0, 8)} إلى "${statusLabel(newStatus)}"؟ سيتم إرجاع الكميات للمخزون.`)) return
     await request(`orders/${order.id}/status`, { status: newStatus }, 'PUT')
     order.status = newStatus
+    // Refresh dashboard counters, then the current (possibly filtered) page of orders.
     await loadBundle()
+    await loadSection()
     ui.showToast(`تم تحديث حالة الطلب #${order.id.slice(0, 8)} إلى: ${statusLabel(newStatus)}`, 'success')
   })
 }
@@ -521,6 +569,7 @@ function openWhatsAppUrl(url: string) {
 // Settings Actions
 function saveStoreSettings() {
   return run(async () => {
+    if (!settingsLoaded.value) throw new Error('لم يتم تحميل الإعدادات الحالية بعد. أعد تحميل الصفحة قبل الحفظ.')
     await request('settings/shipping', { value: settings.value.shipping }, 'PUT')
     await request('settings/payment_methods', { value: settings.value.payment_methods }, 'PUT')
     await request('settings/discounts', { value: settings.value.discounts }, 'PUT')
@@ -555,11 +604,6 @@ async function logout() {
 </script>
 
 <template>
-  <nav v-if="section === 'orders' || section === 'customers'" aria-label="Results pages" class="admin-pagination">
-    <button type="button" @click="section === 'orders' ? orderPage = Math.max(1, orderPage - 1) : customerPage = Math.max(1, customerPage - 1); loadSection()">Previous</button>
-    <span>{{ section === 'orders' ? orderPage : customerPage }}</span>
-    <button type="button" @click="section === 'orders' ? orderPage++ : customerPage++; loadSection()">Next</button>
-  </nav>
   <main class="admin-shell" :dir="locale.isRTL ? 'rtl' : 'ltr'">
     <!-- Top-level Sidebar (Always Rendered Instantly 0ms) -->
     <aside class="admin-sidebar">
@@ -585,6 +629,7 @@ async function logout() {
           <span class="nav-icon">⌘</span>
           <span>التصنيفات</span>
         </router-link>
+        <template v-if="isAdminRole">
         <router-link to="/admin/orders" class="sidebar-link">
           <span class="nav-icon">▣</span>
           <span>الطلبات</span>
@@ -594,6 +639,7 @@ async function logout() {
           <span class="nav-icon">♙</span>
           <span>العملاء</span>
         </router-link>
+        </template>
 
         <template v-if="staffRole === 'admin'">
           <div class="sidebar-label">ADMINISTRATION</div>
@@ -650,13 +696,13 @@ async function logout() {
 
             <!-- Metrics Cards -->
             <div class="kpi-grid">
-              <div class="kpi-card">
+              <div v-if="isAdminRole" class="kpi-card">
                 <span class="kpi-label">إجمالي المبيعات</span>
                 <strong v-if="ready || products.length" class="kpi-value">{{ (inventoryMetrics.totalRevenue / 100).toLocaleString('ar-EG') }} ج.م</strong>
                 <div v-else class="skeleton-shimmer h-metric"></div>
-                <span class="kpi-hint">من الطلبات النشطة</span>
+                <span class="kpi-hint">من الطلبات التي تم توصيلها</span>
               </div>
-              <div class="kpi-card">
+              <div v-if="isAdminRole" class="kpi-card">
                 <span class="kpi-label">طلبات قيد التجهيز</span>
                 <strong v-if="ready || products.length" class="kpi-value lime-val">{{ inventoryMetrics.processingCount }}</strong>
                 <div v-else class="skeleton-shimmer h-metric"></div>
@@ -681,7 +727,7 @@ async function logout() {
             <!-- Dashboard Split Panels -->
             <div class="dashboard-split">
               <!-- Recent Orders -->
-              <div class="dash-panel">
+              <div v-if="isAdminRole" class="dash-panel">
                 <div class="dash-panel-head">
                   <h3>أحدث الطلبات الواردة</h3>
                   <router-link to="/admin/orders" class="link-btn">عرض الكل ←</router-link>
@@ -704,6 +750,23 @@ async function logout() {
                 </div>
               </div>
 
+              <!-- Restock list: variants at or below the low-stock threshold -->
+              <div class="dash-panel" data-test="restock-panel">
+                <div class="dash-panel-head">
+                  <h3>تحتاج إعادة تخزين</h3>
+                  <router-link to="/admin/products" class="link-btn">كل المنتجات ←</router-link>
+                </div>
+                <div v-if="!restockList.length" class="empty-state-box"><p>كل المقاسات متوفرة بكميات كافية ✅</p></div>
+                <div v-else class="dash-orders-list">
+                  <router-link v-for="item in restockList" :key="item.product.id + item.color + item.size" :to="'/admin/products/' + item.product.id" class="dash-order-row restock-row">
+                    <div>
+                      <strong>{{ item.product.name }}</strong>
+                      <small class="time-stamp">{{ item.color }} · {{ item.size }}</small>
+                    </div>
+                    <span :class="['badge-status', item.stock === 0 ? 'status-cancelled' : 'status-processing']">{{ item.stock === 0 ? 'نفد' : 'متبقي ' + item.stock }}</span>
+                  </router-link>
+                </div>
+              </div>
               <!-- Inventory & Category Distribution -->
               <div class="dash-panel">
                 <div class="dash-panel-head">
@@ -941,11 +1004,7 @@ async function logout() {
                     :disabled="busy"
                     @change="updateOrderStatus(order, ($event.target as HTMLSelectElement).value)"
                   >
-                    <option value="processing">قيد التجهيز</option>
-                    <option value="shipped">تم الشحن</option>
-                    <option value="delivered">تم التوصيل</option>
-                    <option value="cancelled">ملغي</option>
-                    <option value="returned">Returned / مرتجع</option>
+                    <option v-for="status in statusOptions(order.status)" :key="status" :value="status">{{ statusLabel(status) }}</option>
                   </select>
                 </div>
               </div>
@@ -1017,6 +1076,11 @@ async function logout() {
               </div>
             </div>
           </div>
+          <nav v-if="orderPages > 1" aria-label="صفحات النتائج" class="admin-pagination">
+            <button type="button" class="btn-action" :disabled="busy || orderPage <= 1" @click="goToPage('orders', orderPage - 1)">السابق</button>
+            <span>صفحة {{ orderPage }} من {{ orderPages }}<template v-if="ordersTotal !== null"> · {{ ordersTotal }} إجمالي</template></span>
+            <button type="button" class="btn-action" :disabled="busy || orderPage >= orderPages" @click="goToPage('orders', orderPage + 1)">التالي</button>
+          </nav>
         </template>
 
         <!-- 4. CUSTOMERS DIRECTORY -->
@@ -1070,6 +1134,11 @@ async function logout() {
               </tbody>
             </table>
           </div>
+          <nav v-if="customerPages > 1" aria-label="صفحات النتائج" class="admin-pagination">
+            <button type="button" class="btn-action" :disabled="busy || customerPage <= 1" @click="goToPage('customers', customerPage - 1)">السابق</button>
+            <span>صفحة {{ customerPage }} من {{ customerPages }}<template v-if="customersTotal !== null"> · {{ customersTotal }} إجمالي</template></span>
+            <button type="button" class="btn-action" :disabled="busy || customerPage >= customerPages" @click="goToPage('customers', customerPage + 1)">التالي</button>
+          </nav>
         </template>
 
         <!-- 5. CATEGORIES HIERARCHY -->
@@ -1160,8 +1229,8 @@ async function logout() {
                 <h1>إعدادات المتجر العامة</h1>
                 <p class="section-desc">التحكم في تكاليف الشحن، بوابات الدفع الإلكتروني، وكوبونات الخصم.</p>
               </div>
-              <button class="btn-primary-lime" :disabled="busy" @click="saveStoreSettings">
-                💾 حفظ كافة التغييرات
+              <button class="btn-primary-lime" :disabled="busy || !settingsLoaded" @click="saveStoreSettings">
+                {{ settingsLoaded ? '💾 حفظ كافة التغييرات' : 'جاري تحميل الإعدادات…' }}
               </button>
             </div>
 
@@ -1392,6 +1461,8 @@ async function logout() {
 </template>
 
 <style scoped>
+.admin-pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.5rem 0; }
+.restock-row { text-decoration: none; color: inherit; }
 /* Studio Active High-End Athletic Control Center */
 .admin-shell {
   display: grid;
