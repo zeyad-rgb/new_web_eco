@@ -34,9 +34,57 @@ body.ltr-english {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   letter-spacing: -0.01em;
 }
+/* Arabic script must come from a font that has it. Setting the family only on
+   <body> was not enough: components declare their own font-family and the
+   Latin faces have no Arabic glyphs, so the browser fell back to a default and
+   the text looked misshapen. Apply it to everything, with Inter kept after it
+   for the Latin fragments (prices, sizes, SKUs). */
+html[lang="ar"] body,
+html[lang="ar"] body *,
+body.rtl-arabic,
+body.rtl-arabic * {
+  font-family: 'IBM Plex Sans Arabic', 'Inter', Tahoma, Arial, sans-serif;
+}
+
 html[lang="ar"] body,
 body.rtl-arabic {
-  font-family: 'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif;
+  /* Arabic needs a touch more size and line height than Latin at the same
+     nominal px, or it reads cramped. */
+  font-size: 1.04em;
+  line-height: 1.75;
+  letter-spacing: 0;
+}
+
+/* Latin display styling that does not apply to Arabic script.
+   UPPERCASE has no effect in Arabic but still triggers the tighter tracking
+   and squashed line heights those headings were given, which is what made
+   the page hard to read after switching language. */
+html[lang="ar"] :is(h1, h2, h3, h4, .product-title, .hero-copy h1, .heading h1,
+                    .section-title h2, .collection-intro h2, .collection-card span,
+                    .category-strip a, .filter-toggle, .add-to-bag-btn, .hero-cta,
+                    .hero-kicker, .hero-foot, .label, .accordion-trigger) {
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.4;
+  word-spacing: 0.04em;
+}
+
+/* Small UI text in Arabic needs a floor: 11-12px Latin is readable, the same
+   size in Arabic is not. */
+html[lang="ar"] :is(.product-title, .product-fit, .product-price, .hero-kicker,
+                    .hero-foot, .collection-card span, .heading span,
+                    .listing-path, .chips-title) {
+  font-size: max(0.82rem, 1em);
+}
+
+/* Big display type can stay tight-ish, but never negative. */
+html[lang="ar"] :is(.hero-copy h1, .heading h1, .story-banner h2) {
+  line-height: 1.22;
+}
+
+/* Latin fragments inside Arabic pages (prices, SKUs, sizes) keep their own font. */
+html[lang="ar"] :is([dir="ltr"], .product-price, .detail-price, code) {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 .notice{background:#161813;color:#f4f5ef;letter-spacing:.015em}
 .nav{min-height:4.7rem;background:#fafaf8}

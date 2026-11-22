@@ -78,7 +78,7 @@ function closeMenu(event: KeyboardEvent) { if(event.key === 'Escape') open.value
  <button class="cap-menu-button" aria-label="Open menu" :aria-expanded="open" aria-controls="cap-navigation" @click="open = !open"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 5h20M2 12h20M2 19h20" /></svg></button>
  <router-link to="/" class="cap-logo" aria-label="Studio Active home"><span class="logo-mark">SA</span><span class="logo-type">STUDIO<br /><b>ACTIVE</b></span></router-link>
  <nav class="category-nav" aria-label="Shop categories" @mouseleave="closeMegaMenu">
-  <router-link to="/" class="category-link">HOME</router-link>
+  <router-link to="/" class="category-link">{{ locale.locale === 'en' ? 'HOME' : 'الرئيسية' }}</router-link>
   <button
     v-for="category in topCategories"
     :key="category.slug"
@@ -89,7 +89,7 @@ function closeMenu(event: KeyboardEvent) { if(event.key === 'Escape') open.value
     @focus="openMegaMenu(category.slug)"
     @click="openMegaMenu(activeCategory === category.slug ? '' : category.slug)"
   >{{ categoryName(category).toUpperCase() }}</button>
-  <router-link to="/faq" class="category-link">CONTACT</router-link>
+  <router-link to="/faq" class="category-link">{{ locale.locale === 'en' ? 'CONTACT' : 'تواصل معنا' }}</router-link>
 
   <div v-if="activeCategory" class="mega-menu" @mouseenter="openMegaMenu(activeCategory)">
    <div class="mega-columns">
@@ -122,7 +122,7 @@ function closeMenu(event: KeyboardEvent) { if(event.key === 'Escape') open.value
 <div v-if="open" class="cap-menu-backdrop" @click.self="open = false">
  <nav id="cap-navigation" class="cap-navigation" aria-label="Main navigation">
   <button class="cap-close" aria-label="Close menu" @click="open = false">×</button>
-  <router-link to="/">HOME</router-link><router-link to="/shop">SHOP ALL</router-link>
+  <router-link to="/">{{ locale.locale === 'en' ? 'HOME' : 'الرئيسية' }}</router-link><router-link to="/shop">{{ locale.locale === 'en' ? 'SHOP ALL' : 'كل المنتجات' }}</router-link>
   <router-link to="/shop?category=men">MEN</router-link><router-link to="/shop?category=women">WOMEN</router-link><router-link to="/shop?category=kids">KIDS</router-link>
   <router-link to="/shop?collection=latest">NEW DROP</router-link><router-link :to="accountLink">MY ACCOUNT</router-link>
   <button @click="open = false; search = true">SEARCH</button>
