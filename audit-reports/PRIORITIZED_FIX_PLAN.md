@@ -20,6 +20,15 @@ Nothing below has been changed. Each item needs your approval before it touches 
 | 9 | OPS-02 | Nightly `pg_dump` + media archive, documented restore, rehearsal | restore into a scratch DB, run smoke E2E | ½ day |
 | 10 | OPS-03 | Error tracking + uptime + failed-jobs alert | trigger a test exception, confirm alert | 2 h |
 
+## P1 additions (customer page and performance, 2026-11-22)
+| ID | Fix | Test | Effort |
+|---|---|---|---|
+| CUST-01 | Route guard for `/profile`, remove demo fallbacks | drop `test.fail` in customer-account.spec | 30 min |
+| CUST-02 | One shipping threshold from settings everywhere; drop the member-only claim | E2E text == quote API | 1 h |
+| CUST-05 | Password reset via Laravel password broker + mail | E2E reset flow on E2E DB | ½ day |
+| PERF-02 | Preload hero, responsive WebP `srcset`, trim fonts | re-trace: mobile LCP < 2.5 s | 2–3 h |
+| PERF-04 | nginx `gzip on` / `gzip_static` | `curl -H 'Accept-Encoding: gzip' -I` shows `Content-Encoding` | 15 min |
+
 ## P2: soon after
 SEC-04 (one login message), EC-04 (returns/refunds model), EC-05 (PostgreSQL concurrency test in CI), EC-06 (password reset), DB-01/DB-02 (FK, unique, CHECK), FE-01 (contrast and labels), OPS-04/05 (healthchecks, migrate step, scheduler), PERF-02/03 (CWV + production-like load test), E2E in CI.
 

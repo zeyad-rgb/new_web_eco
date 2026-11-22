@@ -10,7 +10,7 @@ The one **High** access-control bug is fixed (pending merge). Before launch, add
 ## Findings by severity
 | Critical | High | Medium | Low | Info |
 |---|---|---|---|---|
-| 0 | 1 (fixed) | 13 | 15 | 11 |
+| 0 | 1 (fixed) | 18 | 18 | 11 |
 
 ## Top 5
 1. **SEC-01 (High), fixed.** A demoted admin could still read all customer orders and PII. Fixed on `fix/sec-01-stale-staff-role` with 12 new regression checks.

@@ -1,10 +1,10 @@
 # Audit index: 2026-11-22
 
-[Executive summary](EXECUTIVE_SUMMARY.md) · [Fix plan](PRIORITIZED_FIX_PLAN.md) · [Production readiness](PRODUCTION_READINESS.md) · [Test results](AUTOMATED_TEST_RESULTS.md) · [Setup report](SETUP_REPORT.md)
+[Executive summary](EXECUTIVE_SUMMARY.md) · [Customer account](CUSTOMER_ACCOUNT_AUDIT.md) · [Fix plan](PRIORITIZED_FIX_PLAN.md) · [Production readiness](PRODUCTION_READINESS.md) · [Test results](AUTOMATED_TEST_RESULTS.md) · [Setup report](SETUP_REPORT.md)
 
 | Critical | High | Medium | Low | Info |
 |---|---|---|---|---|
-| 0 | 1 (fixed) | 13 | 15 | 11 |
+| 0 | 1 (fixed) | 18 | 18 | 11 |
 
 | ID | Severity | Confidence | Title | Priority | Report |
 |---|---|---|---|---|---|
@@ -22,10 +22,18 @@
 | FE-01 | Medium | Verified | Contrast + accessible-name violations on every page | P2 | [Frontend](FRONTEND_AUDIT.md) |
 | OPS-02 | Medium | Verified | No backups / restore procedure | P1 | [DevOps](DEVOPS_AUDIT.md) |
 | OPS-03 | Medium | Verified | No error tracking / alerting | P1 | [DevOps](DEVOPS_AUDIT.md) |
+| CUST-01 | Medium | Verified | `/profile` open to anonymous visitors, shows fake account | P1 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
+| CUST-02 | Medium | Verified | Member free-shipping promise not applied by server; 4 different thresholds | P1 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
+| CUST-05 | Medium | Verified | No password reset (absorbs EC-06) | P1 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
+| PERF-02 | Medium | Verified (lab) | Mobile LCP 6.3 s on home, 3.6–3.9 s shop/product | P1 | [Performance](PERFORMANCE_AUDIT.md) |
+| PERF-04 | Medium | Verified | nginx serves JS/CSS/JSON uncompressed | P1 | [Performance](PERFORMANCE_AUDIT.md) |
 | SEC-04 | Low | Verified | Staff email enumeration via login message | P2 | [Security](SECURITY_AUDIT.md) |
 | SEC-06 | Low | Verified | `env()` outside config | P3 | [Security](SECURITY_AUDIT.md) |
 | EC-05 | Low | Untested | Last-item race not tested on PostgreSQL | P2 | [E-commerce](ECOMMERCE_AUDIT.md) |
-| EC-06 | Low | Verified | No password reset | P2 | [E-commerce](ECOMMERCE_AUDIT.md) |
+| CUST-03 | Low | Verified | Points and tier are hard-coded placeholders | P2 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
+| CUST-04 | Low | Verified | Birthday voucher / early access advertised, not implemented | P2 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
+| CUST-06 | Low | Verified | No "my orders" list or profile editing | P2 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
+| PERF-05 | Low | Verified | Catalog API capped by global 120/min API throttle | P2 | [Performance](PERFORMANCE_AUDIT.md) |
 | DB-01 | Low | Verified | No FK / unique on variants | P2 | [Database](DATABASE_AUDIT.md) |
 | DB-02 | Low | Verified | Stock ≥ 0 not enforced on PostgreSQL | P2 | [Database](DATABASE_AUDIT.md) |
 | BE-02 | Low | Verified | Dead code + stray empty files | P3 | [Backend](BACKEND_AUDIT.md) |
@@ -45,8 +53,8 @@
 | DB-05 | Info | Verified | Price stored in JSON | — | [Database](DATABASE_AUDIT.md) |
 | FE-03 | Info | Verified | Static `v-html` | — | [Frontend](FRONTEND_AUDIT.md) |
 | API-03 | Info | — | No OpenAPI contract | — | [API](API_AUDIT.md) |
-| PERF-02 | Info | Untested | Core Web Vitals not measured | P2 | [Performance](PERFORMANCE_AUDIT.md) |
+| CUST-07 | Info | Verified | "Member since" shows raw timestamp | — | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
 | PERF-03 | Info | Untested | No production-like load test | P2 | [Performance](PERFORMANCE_AUDIT.md) |
 | DEP-01/02 | Info | — | Range pins; enable Dependabot | — | [Dependencies](DEPENDENCY_AUDIT.md) |
 
-Duplicates merged under one root cause: OPS-01 → SEC-03, FE-02 → EC-01, DB-03 → EC-02, DB-04 → SEC-05, API-01 → SEC-01.
+Duplicates merged under one root cause: OPS-01 → SEC-03, FE-02 → EC-01, DB-03 → EC-02, DB-04 → SEC-05, API-01 → SEC-01, EC-06 → CUST-05, CUST-08 → FE-01.

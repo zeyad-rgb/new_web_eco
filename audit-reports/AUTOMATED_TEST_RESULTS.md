@@ -13,7 +13,7 @@ Run: 2026-11-22 via `python tools/audit/run_audit.py` (raw output in `audit-repo
 | gitleaks-worktree | ✅ passed | 0 leaks (generated caches allow-listed) |
 | semgrep | ⏭ **skipped** | semgrep-core crashes on native Windows; runs in CI `security.yml` |
 | trivy-fs | ⚠ findings | 1 LOW misconfig (Dockerfile HEALTHCHECK), 0 vulns, 0 secrets |
-| e2e-playwright | ✅ passed | 49 tests: 48 passed + 1 expected failure (SEC-03 tracked with `test.fail`), 84 s |
+| e2e-playwright | ✅ passed | 56 tests after adding customer-account.spec (2026-11-22) · originally | 49 tests: 48 passed + 1 expected failure (SEC-03 tracked with `test.fail`), 84 s |
 | k6-smoke | ⚠ findings | thresholds crossed against the single-threaded dev server; see PERFORMANCE_AUDIT.md |
 
 ## Playwright breakdown
