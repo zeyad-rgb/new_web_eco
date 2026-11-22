@@ -45,12 +45,12 @@ The order confirmation text exists twice: in `WhatsAppService` (server) and in `
 |---|---|---|---|---|---|
 `/api/v1/products` returns every published product with all variants (10 KB for 3 products), and the shop filters in JavaScript. At a few hundred products this becomes a slow first paint on mobile. Move filtering, sorting and pagination to the API.
 
-### PDP-03: Reviews and the fit bar are presentational
+### PDP-03: Reviews and the fit bar are presentational ✅ fixed
 | Severity | Low | Priority | P3 | Location | `components/product/ProductReviews.vue` (620 lines) |
 |---|---|---|---|---|---|
 Ratings and review counts are not backed by any table or endpoint, so the stars shown to customers are not real. Either build reviews (table, moderation, verified-purchase flag) or remove the section before launch — same class of issue as the membership perks in CUST-02.
 
-### PDP-04: Shipping and care text is hard-coded in the page
+### PDP-04: Shipping and care text is hard-coded in the page ✅ fixed
 | Severity | Low | Priority | P3 |
 |---|---|---|---|
 The "shipping" accordion repeats delivery times that are a store setting, so an admin change does not reach it (same root cause as CUST-10).
@@ -61,3 +61,12 @@ The "shipping" accordion repeats delivery times that are a store setting, so an 
 | `backend/tests/run.php` | +10 checks (74 total) | sold-product delete 409, server order filters + total header, collections/badge/fit persistence, storefront sees collection changes, sold-variant removal 409 |
 | `frontend/e2e/admin.spec.ts` | 13 | every section loads clean for an admin, saved settings are not replaced by defaults, allowed-transition menu, status filter hits the server, restock panel, delete refusal, admin edit → shop card, catalog-manager menu has no 403 links |
 | `frontend/e2e/catalog-pages.spec.ts` | 6 | every home tile lands on a non-empty page, one h1, eager hero, new arrivals renders, unknown product shows not-found, out-of-stock sizes disabled |
+
+## Resolution (2026-11-23)
+| ID | Fix | Test |
+|---|---|---|
+| EC-01 | `/api/v1/products` now returns `paymentMethods`; checkout only offers a method the order API accepts, driven by the admin toggles rather than the build mode. | run.php "catalog exposes accepted payment methods" |
+| EC-02 | `inventory_movements.order_id` is nullable with a new `actor_email`; a staff stock edit writes one `adjustment` row per changed variant, so stock reconciles against sales. The delete/variant guards count only `sale`/`restore`, not adjustments. | run.php "stock adjustment recorded in ledger", "unchanged sizes create no ledger rows" |
+| EC-03 | Every product save writes `product.updated` (or `product.created`) to `audit_events` with the old and new price and the net stock change. | run.php "audit records the price change", "audit records the net stock change" |
+| PDP-03 | `ProductReviews.vue` (620 lines of invented ratings, review counts and fit bars) removed from the product page and deleted. | catalog-pages "shows no invented ratings…" |
+| PDP-04 / CUST-10 | Delivery estimate, cart meter and trust bar read the store's shipping setting; the hard-coded 1,000 EGP figures are gone. | same test asserts no stale figure appears |

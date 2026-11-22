@@ -5,14 +5,15 @@
    Logical properties throughout so the Arabic (RTL) and English (LTR) layouts
    mirror correctly from the same rules. */
 
+
 :root {
-  --pdp-ink: #0b0b0c;
-  --pdp-ink-soft: #55575c;
-  --pdp-line: #e2e2df;
-  --pdp-surface: #ffffff;
-  --pdp-stage: #f1f0ec;
-  --pdp-accent: #d35a28;
-  --pdp-ok: #1d7a44;
+  --pdp-ink: var(--street-ink);
+  --pdp-ink-soft: var(--street-ink-soft);
+  --pdp-line: var(--street-line);
+  --pdp-surface: var(--street-paper);
+  --pdp-stage: var(--street-stage);
+  --pdp-accent: var(--street-clay);
+  --pdp-ok: #2f6d4f;
   --pdp-max: 1480px;
 }
 

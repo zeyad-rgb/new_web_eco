@@ -130,12 +130,17 @@ final class ProductEditorController
                 ], JSON_THROW_ON_ERROR),
             ]);
             $kept = [];
+            $adjustments = [];
             foreach ($data['variants'] as $variant) {
                 $color = $colors->get($variant['colorId']);
                 $prior = $old->first(fn ($row) =>
                     $row->size === $variant['size'] && ($row->color_key === $color['id'] || ($row->color_key === null && $row->color === $color['name'])));
                 $sku = $prior?->sku ?? (string) Str::uuid();
                 $kept[] = $sku;
+                // A manual stock change is a real inventory movement: without it stock
+                // cannot be reconciled against sales (EC-02).
+                $delta = (int) $variant['stock'] - (int) ($prior->stock ?? 0);
+                if ($delta !== 0) $adjustments[] = ['sku' => $sku, 'quantity' => $delta];
                 DB::table('variants')->updateOrInsert(['sku' => $sku], [
                     'product_id' => $id, 'color' => $color['name'], 'color_key' => $color['id'],
                     'size' => $variant['size'], 'stock' => $variant['stock'],
@@ -143,10 +148,31 @@ final class ProductEditorController
             }
             $removed = $old->pluck('sku')->diff($kept);
             if ($removed->isNotEmpty()) {
-                $sold = DB::table('inventory_movements')->whereIn('sku', $removed)->pluck('sku')->unique();
+                $sold = DB::table('inventory_movements')->whereIn('sku', $removed)
+                    ->whereIn('reason', ['sale', 'restore'])->pluck('sku')->unique();
                 abort_if($sold->isNotEmpty(), 409, 'لا يمكن حذف مقاس أو لون له طلبات سابقة. اضبط الكمية على صفر بدلاً من حذفه.');
             }
             DB::table('variants')->where('product_id', $id)->whereNotIn('sku', $kept)->delete();
+            foreach ($adjustments as $movement) {
+                DB::table('inventory_movements')->insert([
+                    'sku' => $movement['sku'], 'order_id' => null, 'quantity' => $movement['quantity'],
+                    'reason' => 'adjustment', 'actor_email' => $email, 'created_at' => now(),
+                ]);
+            }
+            $oldPrice = $details['price'] ?? null;
+            DB::table('audit_events')->insert([
+                'actor_email' => $email,
+                'event' => $existing ? 'product.updated' : 'product.created',
+                'subject_type' => 'product', 'subject_id' => $id,
+                'metadata' => json_encode([
+                    'name' => $data['name'],
+                    'price' => ['old' => $oldPrice, 'new' => $data['price']],
+                    'published' => $data['published'],
+                    'stock_delta' => array_sum(array_column($adjustments, 'quantity')),
+                    'variants_changed' => count($adjustments),
+                ], JSON_THROW_ON_ERROR),
+                'ip_address' => $request->ip(), 'created_at' => now(),
+            ]);
             if (array_key_exists('collections', $data)) {
                 DB::table('collection_product')->where('product_id', $id)->whereNotIn('collection_slug', $data['collections'] ?: [''])->delete();
                 foreach ($data['collections'] as $slug) {

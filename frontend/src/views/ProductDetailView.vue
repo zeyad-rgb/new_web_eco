@@ -2,13 +2,13 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCatalogStore } from '../stores/catalog'
+import { useFreeShippingText } from '../utils/shipping'
 import { useCartStore } from '../stores/cart'
 import { useFavoritesStore } from '../stores/favorites'
 import { useUIStore } from '../stores/ui'
 import { useLocaleStore } from '../stores/locale'
 import ProductGallery from '../ProductGallery.vue'
 import SizeGuideModal from '../components/product/SizeGuideModal.vue'
-import ProductReviews from '../components/product/ProductReviews.vue'
 import ProductCard from '../components/product/ProductCard.vue'
 import { formatMoney } from '../utils/money'
 import { getColorHex } from '../utils/colors'
@@ -18,6 +18,14 @@ import type { Product } from '../types'
 const route = useRoute()
 const router = useRouter()
 const catalog = useCatalogStore()
+const freeShippingText = useFreeShippingText()
+// Delivery estimate comes from the store settings, so an admin change reaches
+// the product page instead of contradicting it (PDP-04).
+const deliveryEstimate = computed(() => {
+  const days = String(catalog.shippingSettings?.estimated_days || '').trim()
+  if (!days) return locale.locale === 'en' ? 'Delivery across Egypt.' : 'التوصيل لكافة المحافظات.'
+  return locale.locale === 'en' ? `Delivery within ${days} across Egypt.` : `التوصيل خلال ${days} لكافة المحافظات.`
+})
 const cart = useCartStore()
 const favorites = useFavoritesStore()
 const ui = useUIStore()
@@ -330,7 +338,8 @@ const relatedProducts = computed(() => {
               <span class="acc-icon">{{ openAccordion === 'shipping' ? '−' : '+' }}</span>
             </button>
             <div v-show="openAccordion === 'shipping'" class="accordion-content">
-              <p>• {{ locale.locale === 'en' ? 'Fast delivery within 2-4 business days across Egypt.' : 'التوصيل السريع خلال ٢ إلى ٤ أيام عمل لكافة المحافظات.' }}</p>
+              <p v-if="freeShippingText">• {{ freeShippingText }}</p>
+              <p>• {{ deliveryEstimate }}</p>
               <p>• {{ locale.locale === 'en' ? 'Inspect and try your item with Cash on Delivery option.' : 'إمكانية معاينة واستلام مع خيار الدفع نقداً عند الباب.' }}</p>
               <p>• {{ locale.locale === 'en' ? 'Hassle-free 14-day exchange and return policy.' : 'إرجاع واستبدال مجاني وسهل خلال ١٤ يوماً من تاريخ الاستلام.' }}</p>
             </div>
@@ -384,7 +393,6 @@ const relatedProducts = computed(() => {
     </div>
 
     <!-- Customer Reviews & Fit Breakdown (Adidas Style) -->
-    <ProductReviews />
 
     <!-- Related Products -->
     <section v-if="relatedProducts.length" class="related-section">

@@ -20,6 +20,9 @@ export const useCatalogStore = defineStore('catalog', () => {
   const shippingSettings = ref<any>({ fee: 8500, free_threshold: 0, currency: 'EGP', estimated_days: '2-4 أيام عمل' })
   const storefrontSettings = ref<any>({ announcement_text: '', visit_label: 'Visit Us', location_url: '' })
   const whatsappSettings = ref<any>({ enabled: true, support_phone: '01000000000', welcome_message: 'Hello, I would like to ask about your products.' })
+  // Only cash on delivery is accepted until a gateway exists; the API is the source
+  // of truth so the checkout never offers a method the order endpoint rejects (EC-01).
+  const paymentMethods = ref<Record<string, boolean>>({ cash_on_delivery: true, card: false, instapay: false, vodafone_cash: false })
   const status = ref('')
   const loading = ref(false)
   const lastLoadedAt = ref<number>(0)
@@ -41,6 +44,7 @@ export const useCatalogStore = defineStore('catalog', () => {
         shippingSettings.value = data.shippingSettings || shippingSettings.value
         storefrontSettings.value = data.storefrontSettings || storefrontSettings.value
         whatsappSettings.value = data.whatsappSettings || whatsappSettings.value
+        paymentMethods.value = data.paymentMethods || paymentMethods.value
       }
     }
   } catch {}
@@ -121,6 +125,7 @@ export const useCatalogStore = defineStore('catalog', () => {
       shippingSettings.value = data.shippingSettings || shippingSettings.value
       storefrontSettings.value = data.storefrontSettings || storefrontSettings.value
       whatsappSettings.value = data.whatsappSettings || whatsappSettings.value
+      paymentMethods.value = data.paymentMethods || paymentMethods.value
       lastLoadedAt.value = Date.now()
       invalidated = false
 
@@ -180,6 +185,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     shippingSettings,
     storefrontSettings,
     whatsappSettings,
+    paymentMethods,
     status,
     loading,
     rootCategories,

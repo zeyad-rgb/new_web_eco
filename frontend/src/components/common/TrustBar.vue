@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useFreeShippingText } from '../../utils/shipping'
+
+const freeShippingText = useFreeShippingText()
 // Trust badges inspired by Adidas & EcoMars activewear
 </script>
 
@@ -13,7 +16,7 @@
         <span class="trust-icon" aria-hidden="true">🚚</span>
         <div class="trust-text">
           <strong>شحن مجاني</strong>
-          <small>للطلبات المؤهلة فوق ١٬٠٠٠ جنيه</small>
+          <small>{{ freeShippingText || 'على الطلبات المؤهلة' }}</small>
         </div>
       </div>
 

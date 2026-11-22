@@ -12,9 +12,9 @@
 | SEC-02 | Medium | Verified | `mfa_required` not enforced | P1 | [Security](SECURITY_AUDIT.md) |
 | SEC-03 | Medium | Verified | Missing CSP/nosniff/frame headers; nginx inheritance | P1 | [Security](SECURITY_AUDIT.md) |
 | SEC-05 | Medium | Verified | Plaintext PII in `whatsapp_queue` | P1 | [Security](SECURITY_AUDIT.md) |
-| EC-01 | Medium | Verified | Card/InstaPay shown, COD always submitted | P1 | [E-commerce](ECOMMERCE_AUDIT.md) |
-| EC-02 | Medium | Verified | Staff stock edits bypass inventory ledger | P1 | [E-commerce](ECOMMERCE_AUDIT.md) |
-| EC-03 | Medium | Verified | Price/stock edits not audit-logged | P1 | [E-commerce](ECOMMERCE_AUDIT.md) |
+| EC-01 | ~~Medium~~ **Fixed** | Verified | Card/InstaPay shown, COD always submitted | P1 | [E-commerce](ECOMMERCE_AUDIT.md) |
+| EC-02 | ~~Medium~~ **Fixed** | Verified | Staff stock edits bypass inventory ledger | P1 | [E-commerce](ECOMMERCE_AUDIT.md) |
+| EC-03 | ~~Medium~~ **Fixed** | Verified | Price/stock edits not audit-logged | P1 | [E-commerce](ECOMMERCE_AUDIT.md) |
 | EC-04 | Medium | Verified | Returns restock automatically, refunds untracked | P2 | [E-commerce](ECOMMERCE_AUDIT.md) |
 | BE-01 | Medium | Verified | Authorization scattered across route closures | P1 | [Backend](BACKEND_AUDIT.md) |
 | ARCH-01 | Medium | Verified | Staff API as ~25 closures in one file | P1 | [Architecture](ARCHITECTURE_AUDIT.md) |
@@ -29,13 +29,13 @@
 | PDP-01 | ~~Medium~~ **Fixed** | Verified | Unknown product id showed an endless skeleton | done | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
 | ADM-09 | Medium | Verified | Admin.vue is a single 2,745-line component | P2 | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
 | SHOP-01 | Medium | Verified | Shop filters the whole catalog in the browser | P2 | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
-| PDP-03 | Low | Verified | Product reviews and fit bar are not backed by data | P3 | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
+| PDP-03 | ~~Low~~ **Fixed** | Verified | Product reviews and fit bar are not backed by data | P3 | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
 | ADM-10..12 | Low | Verified | No phone search, no bulk actions, duplicated WhatsApp text | P3 | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
 | CUST-01 | ~~Medium~~ **Fixed** | Verified | `/profile` open to anonymous visitors, shows fake account | P1 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
 | CUST-02 | ~~Medium~~ **Fixed** | Verified | Member free-shipping promise not applied by server; 4 different thresholds | P1 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
 | CUST-05 | Medium | Verified | No password reset (absorbs EC-06) | P1 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
 | CUST-09 | ~~Medium~~ **Fixed** | Verified | First visit showed hard-coded store settings (4000 banner, 800, demo WhatsApp) | done | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
-| CUST-10 | Low | Verified | Shipping policy / product / cart still hard-code 1,000 EGP | P2 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
+| CUST-10 | ~~Low~~ **Fixed** | Verified | Shipping policy / product / cart still hard-code 1,000 EGP | P2 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
 | PERF-02 | Medium | Verified (lab) | Mobile LCP 6.3 s on home, 3.6–3.9 s shop/product | P1 | [Performance](PERFORMANCE_AUDIT.md) |
 | PERF-04 | Medium | Verified | nginx serves JS/CSS/JSON uncompressed | P1 | [Performance](PERFORMANCE_AUDIT.md) |
 | SEC-04 | Low | Verified | Staff email enumeration via login message | P2 | [Security](SECURITY_AUDIT.md) |

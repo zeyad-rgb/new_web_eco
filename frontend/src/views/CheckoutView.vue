@@ -49,6 +49,10 @@ const shippingMethod = ref<'standard' | 'express'>('standard')
 
 // Payment Options
 const paymentMethod = ref<'cod' | 'card' | 'instapay'>('cod')
+// Only show a method the order API accepts. The storefront build submits COD
+// for every order, so card/InstaPay appear only where they really work (EC-01).
+const acceptsCard = computed(() => demo && catalog.paymentMethods?.card === true)
+const acceptsInstapay = computed(() => demo && catalog.paymentMethods?.instapay === true)
 
 // Promo Code
 const promoCode = ref('')
@@ -376,7 +380,7 @@ async function handleOrder() {
                 </label>
 
                 <label
-                  v-if="demo"
+                  v-if="acceptsCard"
                   class="choice-card"
                   :class="{ selected: paymentMethod === 'card' }"
                 >
@@ -405,7 +409,7 @@ async function handleOrder() {
                 </label>
 
                 <label
-                  v-if="demo"
+                  v-if="acceptsInstapay"
                   class="choice-card"
                   :class="{ selected: paymentMethod === 'instapay' }"
                 >

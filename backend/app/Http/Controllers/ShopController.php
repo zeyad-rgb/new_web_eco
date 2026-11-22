@@ -85,6 +85,10 @@ final class ShopController
                 'shippingSettings' => $shippingSetting,
                 'storefrontSettings' => $storefrontSetting,
                 'whatsappSettings' => $whatsappSetting,
+                // The storefront must only offer methods the order endpoint accepts (EC-01).
+                'paymentMethods' => \App\Services\CheckoutPricing::setting('payment_methods', [
+                    'cash_on_delivery' => true, 'card' => false, 'instapay' => false, 'vodafone_cash' => false,
+                ]),
             ];
             $rawJson = json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
             $etag = '"' . md5($rawJson) . '"';

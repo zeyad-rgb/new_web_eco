@@ -257,7 +257,11 @@ Route::prefix('staff')->group(function (): void {
         abort_unless($currentStaff && $currentStaff->role === 'admin', 403, 'حذف المنتجات مقصور على مسؤول النظام.');
         // A product with sales history keeps its variants: deleting them would make old
         // orders impossible to cancel or return (stock restore needs the SKU). Unpublish instead.
-        $sold = DB::table('inventory_movements')->whereIn('sku', DB::table('variants')->where('product_id', $id)->select('sku'))->exists();
+        // Only real sales block deletion; manual adjustments (EC-02) are not sales history.
+        $sold = DB::table('inventory_movements')
+            ->whereIn('sku', DB::table('variants')->where('product_id', $id)->select('sku'))
+            ->whereIn('reason', ['sale', 'restore'])
+            ->exists();
         abort_if($sold, 409, 'هذا المنتج له طلبات سابقة ولا يمكن حذفه. حوّله إلى مسودة لإخفائه من المتجر.');
 
         DB::transaction(static function () use ($id, $currentStaff, $request, $logAudit): void {

@@ -1,3 +1,16 @@
+/* ---- Streetwear palette ------------------------------------------------
+   Bone paper instead of pure white, ink that is not quite black, and one
+   washed clay accent used sparingly. Boxy type, wide tracking, square
+   corners: the look of a drop lookbook rather than a gym poster. */
+:root {
+  --street-paper: #f4f1ea;
+  --street-ink: #16161a;
+  --street-ink-soft: #5c5c63;
+  --street-line: #ddd9d0;
+  --street-stage: #e9e5dc;
+  --street-clay: #b4502b;
+}
+
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f6f5f0;color:#191c17;font-family:Tahoma,Arial,sans-serif}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:default}:focus-visible{outline:2px solid #668300;outline-offset:3px}
 .notice{background:#d6fa68;text-align:center;padding:.5rem;font-size:.8rem}.nav,footer{padding:1rem clamp(1rem,5vw,5rem);display:flex;justify-content:space-between;align-items:center;gap:1rem;background:#faf9f4}.brand{font:900 clamp(1.2rem,3vw,2rem)/1 Arial;letter-spacing:-.08em;white-space:nowrap}.brand span{color:#637d19}.nav nav{display:flex;gap:1.2rem;font-size:.85rem}.bag,.drawer-head button,.options button,form button{background:white;border:1px solid #d1d4c9;padding:.6rem .85rem}.bag b{margin-inline-start:.4rem}
 .hero{position:relative;isolation:isolate;overflow:hidden;min-height:clamp(370px,54vw,680px);background:#1e221c;color:#fff;display:flex;align-items:center}.hero-photo{position:absolute;inset:0 0 0 auto;width:100%;z-index:-2;background:linear-gradient(135deg,#343b31,#171b16)}.hero-photo::before{content:'';position:absolute;inset:0 0 0 auto;width:74%;background:var(--campaign,url('/campaign.jpg')) left top/200% 200% no-repeat}.hero::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(270deg,#171b16d9,transparent 75%)}.hero-copy{padding:3rem clamp(1.25rem,8vw,8rem)}.hero-copy p{font:bold .8rem Arial;letter-spacing:.22em;color:#d6fa68}.hero h1{font-size:clamp(4rem,11vw,9rem);letter-spacing:-.06em;line-height:.92;margin:.6rem 0 1.8rem}.primary{display:inline-block;background:#d6fa68;color:#161a12;border:0;padding:.9rem 1.3rem;font-weight:bold}

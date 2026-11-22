@@ -4,11 +4,11 @@
    Shares the --pdp-* tokens defined in storefront-pdp.css. */
 
 .shop.listing {
-  --shop-ink: #0b0b0c;
-  --shop-ink-soft: #55575c;
-  --shop-line: #e2e2df;
-  --shop-stage: #f1f0ec;
-  --shop-accent: #d35a28;
+  --shop-ink: var(--street-ink, #16161a);
+  --shop-ink-soft: var(--street-ink-soft, #5c5c63);
+  --shop-line: var(--street-line, #ddd9d0);
+  --shop-stage: var(--street-stage, #e9e5dc);
+  --shop-accent: var(--street-clay, #b4502b);
   max-width: 1480px;
   padding-inline: clamp(1rem, 4vw, 3.5rem);
   padding-block: 0 clamp(3rem, 6vw, 5rem);
@@ -72,13 +72,14 @@
 
 /* Unselected chips are outlined; only the current one fills in, so the
    active category is unambiguous (every chip used to read as selected). */
+/* Outlined chips on paper, squared off. */
 .shop.listing .category-strip a {
   display: inline-flex;
   align-items: center;
   min-height: 2.5rem;
   padding-inline: 1rem;
   border: 1px solid var(--shop-line);
-  background: #fff;
+  background: transparent;
   color: var(--shop-ink);
   font-size: 0.78rem;
   font-weight: 700;
@@ -191,9 +192,9 @@
 .shop.listing .product-title {
   display: block;
   margin-block-start: 0.75rem;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--shop-ink);

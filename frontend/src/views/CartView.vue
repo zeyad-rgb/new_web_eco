@@ -5,6 +5,7 @@ import { useCatalogStore } from '../stores/catalog'
 import { useCartStore } from '../stores/cart'
 import { useLocaleStore } from '../stores/locale'
 import { formatMoney } from '../utils/money'
+import { useFreeShippingText } from '../utils/shipping'
 import { getColorHex } from '../utils/colors'
 import type { CartItemResolved } from '../types'
 
@@ -12,18 +13,20 @@ const router = useRouter()
 const catalog = useCatalogStore()
 const cart = useCartStore()
 const locale = useLocaleStore()
+const freeShippingText = useFreeShippingText()
 
-// Free shipping threshold: 1,000 EGP (100,000 piastres)
-const FREE_SHIPPING_THRESHOLD = 100000
+// The store's real free-shipping threshold (0 = no offer), so the cart meter
+// cannot promise something checkout will not honour (CUST-10).
+const FREE_SHIPPING_THRESHOLD = computed(() => Number(catalog.shippingSettings?.free_threshold || 0))
 
 const lines = computed(() => cart.getResolvedLines(catalog.products))
 const unavailableItems = computed(() => cart.items.filter((item) => !lines.value.some((line) => line.sku === item.sku)))
 const subtotal = computed(() => cart.subtotal(catalog.products))
 
-const isFreeShipping = computed(() => subtotal.value >= FREE_SHIPPING_THRESHOLD)
-const freeShippingRemaining = computed(() => Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal.value))
+const isFreeShipping = computed(() => FREE_SHIPPING_THRESHOLD.value > 0 && subtotal.value >= FREE_SHIPPING_THRESHOLD.value)
+const freeShippingRemaining = computed(() => Math.max(0, FREE_SHIPPING_THRESHOLD.value - subtotal.value))
 const freeShippingProgress = computed(() =>
-  Math.min(100, Math.round((subtotal.value / FREE_SHIPPING_THRESHOLD) * 100))
+  FREE_SHIPPING_THRESHOLD.value > 0 ? Math.min(100, Math.round((subtotal.value / FREE_SHIPPING_THRESHOLD.value) * 100)) : 100
 )
 
 const shippingFee = computed(() => (isFreeShipping.value ? 0 : catalog.shipping))
@@ -86,7 +89,7 @@ function getItemImage(line: CartItemResolved): string {
             <span class="feature-icon" aria-hidden="true">🚚</span>
             <div class="feature-text">
               <strong>{{ locale.t('cart.feature_free_shipping') }}</strong>
-              <span>{{ locale.t('cart.feature_free_shipping_sub') }}</span>
+              <span>{{ freeShippingText || locale.t('cart.feature_free_shipping_sub') }}</span>
             </div>
           </div>
           <div class="feature-item">

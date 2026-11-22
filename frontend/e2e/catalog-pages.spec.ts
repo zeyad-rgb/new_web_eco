@@ -95,6 +95,25 @@ test.describe('product detail page', () => {
     await expectClean(problems)
   })
 
+  test('shows no invented ratings and no contradictory shipping promise', async ({ page }) => {
+    await page.goto('/product/training-tee')
+    await page.waitForLoadState('networkidle')
+    const text = await page.locator('#app').innerText()
+    // PDP-03: reviews were not backed by any table, so the stars were invented.
+    for (const claim of ['تقييمات وآراء العملاء', 'مشتري معتمد', 'True to Size']) {
+      expect(text, `product page must not show "${claim}"`).not.toContain(claim)
+    }
+    // PDP-04 / CUST-10: any shipping figure shown must be the store's own setting.
+    const threshold = await page.evaluate(async () => {
+      const res = await fetch('/api/v1/products', { headers: { Accept: 'application/json' } })
+      return (await res.json()).shippingSettings?.free_threshold ?? 0
+    })
+    const stale = ['1,000 EGP', '١٬٠٠٠', '800 EGP', '٨٠٠ جنيه']
+    for (const value of stale) {
+      expect(text, `stale shipping figure "${value}" (store threshold is ${threshold})`).not.toContain(value)
+    }
+  })
+
   test('out-of-stock sizes are disabled and cannot be added to the bag', async ({ page }) => {
     await page.goto('/product/training-shorts')
     await page.waitForLoadState('networkidle')
