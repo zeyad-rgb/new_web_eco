@@ -1,0 +1,46 @@
+[
+  {
+    "id": "training-tee",
+    "name": "تيشيرت تمرين",
+    "label": "TRAINING TEE",
+    "category": "تيشيرتات",
+    "price": 55000,
+    "image": "tee",
+    "description": "تيشيرت رياضي بقصّة مريحة للتمرين واللبس اليومي.",
+    "categoryId": "tees",
+    "collections": [
+      "training",
+      "latest"
+    ],
+    "fit": "Regular"
+  },
+  {
+    "id": "training-shorts",
+    "name": "شورت تمرين",
+    "label": "TRAINING SHORTS",
+    "category": "شورتات",
+    "price": 45000,
+    "image": "shorts",
+    "description": "شورت خفيف بقصّة رياضية تسهّل الحركة.",
+    "categoryId": "shorts",
+    "collections": [
+      "training"
+    ],
+    "fit": "Relaxed"
+  },
+  {
+    "id": "cotton-pants",
+    "name": "بنطلون قطن",
+    "label": "COTTON JOGGERS",
+    "category": "بناطيل",
+    "price": 62000,
+    "image": "pants",
+    "description": "بنطلون قطن للتمرين الخفيف واللبس اليومي.",
+    "categoryId": "bottoms",
+    "collections": [
+      "everyday",
+      "latest"
+    ],
+    "fit": "Regular"
+  }
+]

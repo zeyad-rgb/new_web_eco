@@ -1,0 +1,9 @@
+**/node_modules
+**/vendor
+**/dist
+**/build-review
+**/.env
+**/storage
+**/*.sqlite
+**/*.log
+.git

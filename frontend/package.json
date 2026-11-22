@@ -1,0 +1,1 @@
+{"name":"studio-active-storefront","private":true,"type":"module","scripts":{"dev":"vite","build":"vue-tsc --noEmit && vite build"},"dependencies":{"pinia":"^4.1.0","pinia-plugin-persistedstate":"^4.7.1","vue":"^3.5.0","vue-router":"^4.6.5"},"devDependencies":{"@vitejs/plugin-vue":"^6.0.0","typescript":"~5.9.0","vite":"^7.0.0","vue-tsc":"^3.0.0"},"engines":{"node":">=22.12.0"}}

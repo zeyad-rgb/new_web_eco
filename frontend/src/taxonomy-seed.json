@@ -1,0 +1,30 @@
+{
+  "types": [
+    {"slug":"t-shirts","name":"تيشيرتات"},
+    {"slug":"shorts","name":"شورتات"},
+    {"slug":"pants","name":"بناطيل"},
+    {"slug":"sneakers","name":"سنيكرز"},
+    {"slug":"running-shoes","name":"أحذية جري"},
+    {"slug":"caps","name":"قبعات"}
+  ],
+  "categories": [
+    {"slug":"men","name":"رجالي","parent_slug":null,"type_slug":null},
+    {"slug":"men-shoes","name":"أحذية","parent_slug":"men","type_slug":null},
+    {"slug":"men-sneakers","name":"سنيكرز","parent_slug":"men-shoes","type_slug":"sneakers"},
+    {"slug":"men-running","name":"أحذية جري","parent_slug":"men-shoes","type_slug":"running-shoes"},
+    {"slug":"men-clothing","name":"ملابس","parent_slug":"men","type_slug":null},
+    {"slug":"tees","name":"تيشيرتات","parent_slug":"men-clothing","type_slug":"t-shirts"},
+    {"slug":"shorts","name":"شورتات","parent_slug":"men-clothing","type_slug":"shorts"},
+    {"slug":"bottoms","name":"بناطيل","parent_slug":"men-clothing","type_slug":"pants"},
+    {"slug":"men-accessories","name":"إكسسوارات","parent_slug":"men","type_slug":null},
+    {"slug":"men-caps","name":"قبعات","parent_slug":"men-accessories","type_slug":"caps"},
+    {"slug":"women","name":"حريمي","parent_slug":null,"type_slug":null},
+    {"slug":"women-shoes","name":"أحذية","parent_slug":"women","type_slug":null},
+    {"slug":"women-sneakers","name":"سنيكرز","parent_slug":"women-shoes","type_slug":"sneakers"},
+    {"slug":"women-clothing","name":"ملابس","parent_slug":"women","type_slug":null},
+    {"slug":"women-tees","name":"تيشيرتات","parent_slug":"women-clothing","type_slug":"t-shirts"},
+    {"slug":"women-shorts","name":"شورتات","parent_slug":"women-clothing","type_slug":"shorts"},
+    {"slug":"women-accessories","name":"إكسسوارات","parent_slug":"women","type_slug":null},
+    {"slug":"women-caps","name":"قبعات","parent_slug":"women-accessories","type_slug":"caps"}
+  ]
+}

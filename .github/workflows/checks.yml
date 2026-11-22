@@ -1,0 +1,20 @@
+name: checks
+on: [push, pull_request]
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_sqlite, gd, mbstring
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: backend
+      - run: cp backend/.env.example backend/.env
+      - run: php backend/artisan key:generate
+      - run: php backend/tests/run.php
+      - run: npm ci && npm run build
+        working-directory: frontend
