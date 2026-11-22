@@ -1,6 +1,6 @@
 # Audit index: 2026-11-22
 
-[Executive summary](EXECUTIVE_SUMMARY.md) · [Customer account](CUSTOMER_ACCOUNT_AUDIT.md) · [Fix plan](PRIORITIZED_FIX_PLAN.md) · [Production readiness](PRODUCTION_READINESS.md) · [Test results](AUTOMATED_TEST_RESULTS.md) · [Setup report](SETUP_REPORT.md)
+[Executive summary](EXECUTIVE_SUMMARY.md) · [Admin & catalog](ADMIN_AND_CATALOG_AUDIT.md) · [Customer account](CUSTOMER_ACCOUNT_AUDIT.md) · [Fix plan](PRIORITIZED_FIX_PLAN.md) · [Production readiness](PRODUCTION_READINESS.md) · [Test results](AUTOMATED_TEST_RESULTS.md) · [Setup report](SETUP_REPORT.md)
 
 | Critical | High | Medium | Low | Info |
 |---|---|---|---|---|
@@ -22,6 +22,15 @@
 | FE-01 | Medium | Verified | Contrast + accessible-name violations on every page | P2 | [Frontend](FRONTEND_AUDIT.md) |
 | OPS-02 | Medium | Verified | No backups / restore procedure | P1 | [DevOps](DEVOPS_AUDIT.md) |
 | OPS-03 | Medium | Verified | No error tracking / alerting | P1 | [DevOps](DEVOPS_AUDIT.md) |
+| ADM-01 | ~~High~~ **Fixed** | Verified | Settings page showed defaults and could overwrite real settings | done | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
+| ADM-08 | ~~High~~ **Fixed** | Verified | Storefront served a 30s-stale catalog after staff edits | done | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
+| ADM-02..07 | ~~Medium~~ **Fixed** | Verified | Role menus, safe deletes, server order filters, status transitions, badge/fit/collections | done | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
+| HOME-01 | ~~Medium~~ **Fixed** | Verified | All four home tiles led to empty shop pages | done | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
+| PDP-01 | ~~Medium~~ **Fixed** | Verified | Unknown product id showed an endless skeleton | done | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
+| ADM-09 | Medium | Verified | Admin.vue is a single 2,745-line component | P2 | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
+| SHOP-01 | Medium | Verified | Shop filters the whole catalog in the browser | P2 | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
+| PDP-03 | Low | Verified | Product reviews and fit bar are not backed by data | P3 | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
+| ADM-10..12 | Low | Verified | No phone search, no bulk actions, duplicated WhatsApp text | P3 | [Admin](ADMIN_AND_CATALOG_AUDIT.md) |
 | CUST-01 | ~~Medium~~ **Fixed** | Verified | `/profile` open to anonymous visitors, shows fake account | P1 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
 | CUST-02 | ~~Medium~~ **Fixed** | Verified | Member free-shipping promise not applied by server; 4 different thresholds | P1 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
 | CUST-05 | Medium | Verified | No password reset (absorbs EC-06) | P1 | [Customer](CUSTOMER_ACCOUNT_AUDIT.md) |
